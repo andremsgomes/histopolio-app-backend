@@ -44,4 +44,4 @@ app.get("/", (req, res) => {
 app.use("/api/auth", authRouter);
 app.use("/api/game", gameRouter);
 
-server.listen(apiPort, () => console.log(`Server running on port ${apiPort}`));
+server.listen(process.env.PORT, () => console.log(`Server running on port ${apiPort}`));
