@@ -2,6 +2,7 @@ const express = require("express");
 const bodyParser = require("body-parser");
 const http = require("http");
 const cors = require("cors");
+const dotenv = require('dotenv');
 
 const WebSocket = require("ws");
 
@@ -11,6 +12,8 @@ const {
 } = require("./src/controllers/websocket-ctrl");
 const authRouter = require("./src/routes/auth");
 const gameRouter = require("./src/routes/game");
+
+dotenv.config();
 
 const app = express();
 
