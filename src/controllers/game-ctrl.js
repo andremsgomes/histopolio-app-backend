@@ -8,6 +8,8 @@ const {
 } = require("../utils/file-utils");
 
 let gameSaveFilePath = "";
+let gameBoard = "";
+let gameSave = "";
 let gameStarted = false;
 
 async function sendQuestionToFrontend(frontendWS, dataReceived) {
@@ -16,41 +18,78 @@ async function sendQuestionToFrontend(frontendWS, dataReceived) {
   }
 }
 
-async function sendGameStatusToFrontend(frontendWS, userId, saveFilePath) {
-  let playerData = await getPlayerData(saveFilePath, userId);
+async function sendGameStatusToFrontend(
+  frontendWS,
+  userId,
+  board,
+  save,
+  saveFilePath
+) {
+  if (save.length > 0) {
+    let playerData = await getPlayerData(saveFilePath, userId);
 
-  if (!playerData) {
-    playerData = {
+    if (!playerData) {
+      playerData = {
+        points: 20,
+        position: 0,
+        badges: [],
+      };
+    }
+
+    const rank = await getRank(userId, saveFilePath);
+    playerData["rank"] = rank;
+
+    const dataToSend = {
+      type: "game status",
+      gameStarted: gameStarted && board === gameBoard && save === gameSave,
+      playerData: playerData,
+      board: board,
+      save: save,
+    };
+
+    if (frontendWS != null && frontendWS.readyState === WebSocket.OPEN) {
+      frontendWS.send(JSON.stringify(dataToSend));
+    }
+  } else {
+    const playerData = {
       points: 20,
       position: 0,
       badges: [],
+      rank: 0,
     };
-  }
 
-  const rank = await getRank(userId, saveFilePath);
-  playerData["rank"] = rank;
+    const dataToSend = {
+      type: "game status",
+      gameStarted: gameStarted && board === gameBoard,
+      playerData: playerData,
+      board: board,
+      save: gameSave,
+    };
 
-  const dataToSend = {
-    type: "game status",
-    gameStarted: gameStarted,
-    playerData: playerData,
-  };
-
-  if (frontendWS != null && frontendWS.readyState === WebSocket.OPEN) {
-    frontendWS.send(JSON.stringify(dataToSend));
+    if (frontendWS != null && frontendWS.readyState === WebSocket.OPEN) {
+      frontendWS.send(JSON.stringify(dataToSend));
+    }
   }
 }
 
 async function resendGameStatusIfStarted(frontendWSs) {
   if (gameStarted) {
     for (id of frontendWSs.keys()) {
-      sendGameStatusToFrontend(frontendWSs.get(id), id, gameSaveFilePath);
+      sendGameStatusToFrontend(
+        frontendWSs.get(id),
+        id,
+        gameBoard,
+        gameSave,
+        gameSaveFilePath
+      );
     }
   }
 }
 
 async function getRank(userId, saveFilePath) {
   const players = readJSONFile(saveFilePath);
+
+  if (!players) return 0;
 
   players.sort((a, b) => b.points - a.points);
 
@@ -65,7 +104,13 @@ async function setGameReady(frontendWSs) {
   gameStarted = true;
 
   for (id of frontendWSs.keys()) {
-    sendGameStatusToFrontend(frontendWSs.get(id), id, gameSaveFilePath);
+    sendGameStatusToFrontend(
+      frontendWSs.get(id),
+      id,
+      gameBoard,
+      gameSave,
+      gameSaveFilePath
+    );
   }
 }
 
@@ -73,6 +118,8 @@ async function sendEndGameToFrontend(frontendWSs) {
   const dataToSend = {
     type: "game status",
     gameStarted: false,
+    board: gameBoard,
+    save: gameSave,
   };
 
   for (ws of frontendWSs.values()) {
@@ -82,6 +129,8 @@ async function sendEndGameToFrontend(frontendWSs) {
 
 async function endGame() {
   gameSaveFilePath = "";
+  gameBoard = "";
+  gameSave = "";
   gameStarted = false;
 
   console.log("Game ended");
@@ -112,11 +161,13 @@ function addPlayerToGame(unityWS, dataReceived) {
   let multiplier = 1;
   const badges = readJSONFile(`./data/${dataReceived["board"]}/Badges.json`);
 
-  player.badges.forEach((userBadge) => {
-    badge = badges.find((b) => b.id === userBadge);
+  if (badges) {
+    player.badges.forEach((userBadge) => {
+      badge = badges.find((b) => b.id === userBadge);
 
-    if (badge && badge.multiplier > multiplier) multiplier = badge.multiplier;
-  });
+      if (badge && badge.multiplier > multiplier) multiplier = badge.multiplier;
+    });
+  }
 
   const dataToSend = {
     type: "join game",
@@ -176,6 +227,11 @@ async function sendInfoShownToFrontend(frontendWS, dataReceived) {
 
 async function loadGame(unityWS, dataReceived) {
   gameSaveFilePath = `./data/${dataReceived["board"]}/saves/${dataReceived["file"]}`;
+  gameBoard = dataReceived["board"];
+  gameSave = dataReceived["file"].substring(
+    0,
+    dataReceived["file"].indexOf(".json")
+  );
 
   if (!fileExists(gameSaveFilePath)) {
     writeJSONFile(gameSaveFilePath, []);
@@ -314,6 +370,8 @@ function updatePlayerBadges(unityWS, frontendWSs, dataReceived) {
 
 function getPlayerData(file, userId) {
   const savedData = readJSONFile(file);
+
+  if (!savedData) return null;
 
   return savedData.find((player) => player.userId == userId);
 }
