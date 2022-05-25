@@ -210,6 +210,16 @@ async function sendTurnToFrontend(frontendWS) {
   }
 }
 
+async function sendDiceToFrontend(frontendWS) {
+  const dataToSend = {
+    type: "dice",
+  };
+
+  if (frontendWS != null && frontendWS.readyState === WebSocket.OPEN) {
+    frontendWS.send(JSON.stringify(dataToSend));
+  }
+}
+
 async function sendDiceResultToUnity(unityWS, dataReceived) {
   // wait for dice to stop rolling
   await new Promise((resolve) => setTimeout(resolve, dataReceived["rollTime"]));
@@ -706,6 +716,7 @@ module.exports = {
   sendEndGameToFrontend,
   endGame,
   sendTurnToFrontend,
+  sendDiceToFrontend,
   sendDiceResultToUnity,
   sendInfoShownToFrontend,
   loadGame,

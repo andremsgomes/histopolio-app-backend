@@ -50,6 +50,11 @@ async function processMessage(ws, data) {
     case "join game":
       await gameController.addPlayerToGame(unityWS, dataReceived);
       break;
+    case "dice":
+      await gameController.sendDiceToFrontend(
+        frontendWSs.get(dataReceived["userId"])
+      );
+      break;
     case "turn":
       await gameController.sendTurnToFrontend(
         frontendWSs.get(dataReceived["userId"])
