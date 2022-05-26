@@ -23,7 +23,7 @@ const wss = new WebSocket.Server({ server: server });
 
 // Database setup
 mongoose
-  .connect("mongodb://localhost:27017/histopolio", {
+  .connect(process.env.MONGO_URL, {
     useNewUrlParser: true,
     useUnifiedTopology: true,
   })
