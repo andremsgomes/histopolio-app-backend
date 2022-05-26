@@ -1,26 +1,14 @@
 const bcrypt = require("bcrypt");
 
-const { readJSONFile, writeJSONFile } = require("../utils/file-utils");
-
-function getUser(email) {
-  const users = readJSONFile("./data/Users.json");
-
-  return users.find((user) => user.credentials.email === email);
-}
+const User = require("../models/User");
 
 function signup(req, res) {
   const { name, avatarToSend, email, password } = req.body;
 
-  if (!(name && email && password)) {
+  if (!(name && avatarToSend && email && password)) {
     return res
       .status(400)
       .send({ error: true, message: "Dados mal formatados" });
-  }
-
-  if (getUser(email)) {
-    return res
-      .status(409)
-      .json({ error: true, message: "Utilizador já existente" });
   }
 
   // generate salt to hash password
@@ -29,37 +17,33 @@ function signup(req, res) {
   // hash password
   const hashedPassword = bcrypt.hashSync(password, salt);
 
-  const credentials = {
+  const body = {
+    name: name,
     email: email,
     password: hashedPassword,
+    avatarUrl: avatarToSend,
   };
 
-  const users = readJSONFile("./data/Users.json");
-  const lastId = users.length > 0 ? users[users.length - 1].id : 1;
-
-  const user = {
-    id: lastId + 1,
-    credentials: credentials,
-    name: name,
-    avatar: avatarToSend,
-    admin: false,
-  };
-
-  users.push(user);
-  writeJSONFile("./data/Users.json", users);
-
-  const returnUser = {
-    id: user.id,
-    name: user.name,
-    email: user.credentials.email,
-    avatar: user.avatar,
-    admin: user.admin,
-  };
-
-  return res.status(201).json(returnUser);
+  User.create(body)
+    .then((user) => {
+      const returnUser = {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        avatar: user.avatarUrl,
+        adminToken: user.adminToken,
+      };
+      return res.status(201).json(returnUser);
+    })
+    .catch(() => {
+      return res.status(400).json({
+        error: true,
+        message: "Utilizador já existente",
+      });
+    });
 }
 
-function login(req, res) {
+async function login(req, res) {
   const { email, password } = req.body;
 
   if (!(email && password)) {
@@ -68,24 +52,26 @@ function login(req, res) {
       .send({ error: true, message: "Dados mal formatados" });
   }
 
-  const user = getUser(email);
+  const users = await User.find({email: email});
 
-  if (!user) {
+  if (users.length === 0) {
     return res
       .status(404)
       .json({ error: true, message: "Utilizador não encontrado" });
   }
 
-  if (!bcrypt.compareSync(password, user.credentials.password)) {
+  const user = users[0];
+
+  if (!await bcrypt.compare(password, user.password)) {
     return res.status(403).json({ error: true, message: "Password errada" });
   }
 
   const returnUser = {
     id: user.id,
     name: user.name,
-    email: user.credentials.email,
-    avatar: user.avatar,
-    admin: user.admin,
+    email: user.email,
+    avatar: user.avatarUrl,
+    adminToken: user.adminToken,
   };
 
   return res.status(200).json(returnUser);

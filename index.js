@@ -2,7 +2,8 @@ const express = require("express");
 const bodyParser = require("body-parser");
 const http = require("http");
 const cors = require("cors");
-const dotenv = require('dotenv');
+const mongoose = require("mongoose");
+const dotenv = require("dotenv");
 
 const WebSocket = require("ws");
 
@@ -20,10 +21,25 @@ const app = express();
 const server = http.createServer(app);
 const wss = new WebSocket.Server({ server: server });
 
+// Database setup
+mongoose
+  .connect("mongodb://localhost:27017/histopolio", {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+  })
+  .catch((e) => {
+    console.error("Connection error", e.message);
+  });
+
+mongoose.connection
+  .once("open", () => console.log("Database connected"))
+  .on("error", console.error.bind(console, "MongoDB connection error:"));
+
 app.use(cors());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 
+// WebSocket setup
 checkWebSocktetsState();
 
 wss.on("connection", function connection(ws) {
@@ -46,4 +62,6 @@ app.get("/", (req, res) => {
 app.use("/api/auth", authRouter);
 app.use("/api/game", gameRouter);
 
-server.listen(process.env.PORT, () => console.log(`Server running on port ${process.env.PORT}`));
+server.listen(process.env.PORT, () =>
+  console.log(`Server running on port ${process.env.PORT}`)
+);
