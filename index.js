@@ -2,10 +2,12 @@ const express = require("express");
 const bodyParser = require("body-parser");
 const http = require("http");
 const cors = require("cors");
-const mongoose = require("mongoose");
 const dotenv = require("dotenv");
+const mongoose = require("mongoose");
 
 const WebSocket = require("ws");
+
+const seed = require("./src/db/Seed");
 
 const {
   processMessage,
@@ -32,7 +34,10 @@ mongoose
   });
 
 mongoose.connection
-  .once("open", () => console.log("Database connected"))
+  .once("open", () => {
+    console.log("Database connected");
+    seed();
+  })
   .on("error", console.error.bind(console, "MongoDB connection error:"));
 
 app.use(cors());
