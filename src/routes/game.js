@@ -2,7 +2,7 @@ const express = require("express");
 const router = express.Router();
 const gameController = require("../controllers/game-ctrl.js");
 
-router.get("/data/:board", gameController.getBoardData);
+router.get("/data/:board", gameController.getBoard);
 router.post("/data/board/update", gameController.updateBoardData);
 
 router.get("/data/:board/:tile/questions", gameController.getQuestionsData);

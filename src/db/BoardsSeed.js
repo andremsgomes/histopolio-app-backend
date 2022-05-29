@@ -1,5 +1,6 @@
 const Board = require("../models/Board");
 const Tile = require("../models/Tile");
+const seedBadges = require("./BadgesSeed");
 
 async function seedBoards() {
   // Create Histopolio board
@@ -17,6 +18,7 @@ async function seedBoards() {
 
   if (board) {
     await seedTiles(board._id);
+    await seedBadges(board._id);
   }
 }
 
@@ -38,6 +40,7 @@ async function seedTiles(boardId) {
       z: 0.7071068286895752,
       w: 0.7071068286895752,
     },
+    points: 20,
   }).catch((error) => {
     console.log(error);
   });

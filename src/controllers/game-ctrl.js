@@ -1,4 +1,7 @@
 const WebSocket = require("ws");
+const Badge = require("../models/Badge");
+const Board = require("../models/Board");
+const Tile = require("../models/Tile");
 
 const {
   readJSONFile,
@@ -452,77 +455,32 @@ async function getSaves(req, res) {
   return res.status(200).json(saves);
 }
 
-async function getBoardData(req, res) {
-  const board = req.params.board;
+async function getBoard(req, res) {
+  const boardName = req.params.board;
 
-  let boardData = readJSONFile(`./data/${board}/BoardData.json`);
+  const board = await Board.findOne({ name: boardName });
 
-  if (!boardData) {
+  if (!board) {
     return res
       .status(404)
-      .send({ error: true, message: "O ficheiro não existe" });
+      .json({ error: true, message: "Tabuleiro não encontrado" });
   }
 
-  const questions = readJSONFile(`./data/${board}/Questions.json`);
+  const tiles = await Tile.find({ boardId: board._id }).sort("boardPosition");
 
-  if (!questions) {
-    return res
-      .status(404)
-      .send({ error: true, message: "O ficheiro de perguntas não existe" });
-  }
-
-  boardData["groupPropertyTiles"].forEach((tile) => {
-    tile["questions"] = 0;
-  });
-
-  boardData["payTiles"].forEach((tile) => {
-    tile["questions"] = 0;
-  });
-
-  questions["questions"].forEach((question) => {
-    boardData["groupPropertyTiles"].forEach((tile) => {
-      if (question["tileId"] === tile["id"]) {
-        tile["questions"]++;
-      }
-    });
-
-    boardData["payTiles"].forEach((tile) => {
-      if (question["tileId"] === tile["id"]) {
-        tile["questions"]++;
-      }
-    });
-  });
-
-  const cards = readJSONFile(`./data/${board}/Cards.json`);
-
-  if (!cards) {
-    return res
-      .status(404)
-      .send({ error: true, message: "O ficheiro de cartas não existe" });
-  }
-
-  boardData["stationTiles"].forEach((tile) => {
-    tile["cards"] = 0;
-  });
-
-  cards["trainCards"].forEach((card) => {
-    boardData["stationTiles"].forEach((tile) => {
-      if (card["tileId"] === tile["id"]) {
-        tile["cards"]++;
-      }
-    });
-  });
-
-  boardData["communityCards"] = cards["communityCards"];
-  boardData["chanceCards"] = cards["chanceCards"];
-
-  return res.status(200).json(boardData);
+  return res.status(200).json(tiles);
 }
 
-function updateBoardData(req, res) {
-  const { boardData } = req.body;
+async function updateBoardData(req, res) {
+  const { board } = req.body;
 
-  writeJSONFile(`./data/${boardData["name"]}/BoardData.json`, boardData);
+  for (let i = 0; i < board.length; i++) {
+    try {
+      await Tile.findByIdAndUpdate(board[i]._id, board[i], { upsert: true });
+    } catch (error) {
+      return res.status(400).json({ error: true, message: error });
+    }
+  }
 
   return res.status(200).send();
 }
@@ -665,43 +623,43 @@ function newTrainCard(req, res) {
 }
 
 async function getBadges(req, res) {
-  const board = req.params.board;
+  const boardName = req.params.board;
 
-  const badges = readJSONFile(`./data/${board}/Badges.json`);
+  const board = await Board.findOne({ name: boardName });
 
-  if (!badges) {
+  if (!board) {
     return res
       .status(404)
-      .send({ error: true, message: "O ficheiro não existe" });
+      .send({ error: true, message: "Tabuleiro não encontrado" });
   }
+
+  const badges = await Badge.find({ boardId: board._id }).sort("multiplier");
 
   return res.status(200).json(badges);
 }
 
-function newBadge(req, res) {
-  const { board, name, image, multiplier, cost } = req.body;
+async function newBadge(req, res) {
+  const { boardName, name, image, multiplier, cost } = req.body;
 
-  const badges = readJSONFile(`./data/${board}/Badges.json`);
+  const board = await Board.findOne({ name: boardName });
 
-  if (!badges) {
+  if (!board) {
     return res
       .status(404)
-      .send({ error: true, message: "O ficheiro não existe" });
+      .send({ error: true, message: "Tabuleiro não encontrado" });
   }
 
-  const lastId = badges.length > 0 ? badges[badges.length - 1].id : 1;
-
-  const newBadge = {
-    id: lastId + 1,
+  await Badge.create({
+    boardId: board._id,
     name: name,
     multiplier: multiplier,
     cost: cost,
     image: image,
-  };
-
-  badges.push(newBadge);
-
-  writeJSONFile(`./data/${board}/Badges.json`, badges);
+  }).catch(() => {
+    return res
+      .status(400)
+      .send({ error: true, message: "Já existe um troféu com o mesmo nome" });
+  });
 
   return res.status(201).send();
 }
@@ -729,7 +687,7 @@ module.exports = {
   getSavedData,
   updateSavedData,
   getSaves,
-  getBoardData,
+  getBoard,
   updateBoardData,
   getQuestionsData,
   newQuestion,
