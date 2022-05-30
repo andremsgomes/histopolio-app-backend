@@ -10,7 +10,7 @@ router.post("/data/questions/new", gameController.newQuestion);
 
 router.post("/data/cards/deck/new", gameController.newDeckCard);
 
-router.get("/data/:board/:tile/train_cards", gameController.getTrainCardsData);
+router.get("/data/:board/:tile/train_cards", gameController.getTrainCards);
 router.post("/data/cards/train_cards/new", gameController.newTrainCard);
 
 router.get("/data/:board/badges", gameController.getBadges);
