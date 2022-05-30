@@ -1,6 +1,7 @@
 const WebSocket = require("ws");
 const Badge = require("../models/Badge");
 const Board = require("../models/Board");
+const Question = require("../models/Question");
 const Tile = require("../models/Tile");
 
 const {
@@ -485,59 +486,77 @@ async function updateBoardData(req, res) {
   return res.status(200).send();
 }
 
-async function getQuestionsData(req, res) {
-  const board = req.params.board;
-  const tileId = parseInt(req.params.tile);
+async function getQuestions(req, res) {
+  const boardName = req.params.board;
+  const boardPosition = parseInt(req.params.tile);
 
-  const questions = readJSONFile(`./data/${board}/Questions.json`);
+  const board = await Board.findOne({ name: boardName });
 
-  if (!questions) {
+  if (!board) {
     return res
       .status(404)
-      .send({ error: true, message: "O ficheiro não existe" });
+      .send({ error: true, message: "Tabuleiro não encontrado" });
   }
 
-  let tileQuestions = [];
-
-  questions["questions"].forEach((question) => {
-    if (question["tileId"] === tileId) {
-      tileQuestions.push(question);
-    }
+  const tile = await Tile.findOne({
+    boardId: board._id,
+    boardPosition: boardPosition,
   });
 
-  return res.status(200).json(tileQuestions);
-}
-
-function newQuestion(req, res) {
-  const { board, tileId, question, image, answers, correctAnswer } = req.body;
-
-  const questions = readJSONFile(`./data/${board}/Questions.json`);
-
-  if (!questions) {
+  if (!tile) {
     return res
       .status(404)
-      .send({ error: true, message: "O ficheiro não existe" });
+      .send({ error: true, message: "Casa não encontrada" });
   }
 
-  const lastId =
-    questions["questions"].length > 0
-      ? questions["questions"][questions["questions"].length - 1].id
-      : 1;
+  const questions = await Question.find({ tileId: tile._id });
 
-  const newQuestion = {
-    id: lastId + 1,
-    tileId: tileId,
+  return res.status(200).json(questions);
+}
+
+async function newQuestion(req, res) {
+  const {
+    boardName,
+    boardPosition,
+    question,
+    image,
+    answers,
+    correctAnswer,
+  } = req.body;
+
+  const board = await Board.findOne({ name: boardName });
+
+  if (!board) {
+    return res
+      .status(404)
+      .send({ error: true, message: "Tabuleiro não encontrado" });
+  }
+
+  const tile = await Tile.findOne({
+    boardId: board._id,
+    boardPosition: boardPosition,
+  });
+
+  if (!tile) {
+    return res
+      .status(404)
+      .send({ error: true, message: "Casa não encontrada" });
+  }
+
+  Question.create({
+    tileId: tile._id,
     question: question,
     image: image,
     answers: answers,
     correctAnswer: correctAnswer,
-  };
-
-  questions["questions"].push(newQuestion);
-
-  writeJSONFile(`./data/${board}/Questions.json`, questions);
-
-  return res.status(201).send();
+  })
+    .then(() => {
+      return res.status(201).send();
+    })
+    .catch((error) => {
+      console.log(error);
+      return res.status(404).send({ error: true, message: error });
+    });
 }
 
 function newDeckCard(req, res) {
@@ -689,7 +708,7 @@ module.exports = {
   getSaves,
   getBoard,
   updateBoardData,
-  getQuestionsData,
+  getQuestions,
   newQuestion,
   newDeckCard,
   getTrainCardsData,
