@@ -18,9 +18,9 @@ router.post("/data/badges/new", gameController.newBadge);
 
 router.get("/data/:board/saves", gameController.getSaves);
 
-router.get("/data/:board/saves/:save", gameController.getSavedData);
-router.post("/data/save/update", gameController.updateSavedData);
+router.get("/data/:board/saves/:save", gameController.getPlayers);
+router.post("/data/save/update", gameController.updatePlayers);
 
-router.get("/data/:board/:user_id/player", gameController.getPlayerSavedData);
+router.get("/data/:board/players/:user_id", gameController.getPlayerSavedData);
 
 module.exports = router;

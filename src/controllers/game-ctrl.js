@@ -2,8 +2,11 @@ const WebSocket = require("ws");
 const Badge = require("../models/Badge");
 const Board = require("../models/Board");
 const Card = require("../models/Card");
+const Player = require("../models/Player");
 const Question = require("../models/Question");
+const Save = require("../models/Save");
 const Tile = require("../models/Tile");
+const User = require("../models/User");
 
 const {
   readJSONFile,
@@ -392,69 +395,106 @@ function getPlayerData(file, userId) {
 }
 
 async function getPlayerSavedData(req, res) {
-  const board = req.params.board;
+  const boardName = req.params.board;
   const userId = req.params.user_id;
 
-  const saveFiles = getFilesFromDir(`./data/${board}/saves/`);
-  let saves = [];
+  const board = await Board.findOne({ name: boardName });
 
-  saveFiles.forEach((file) => {
-    const player = getPlayerData(`./data/${board}/saves/${file}`, userId);
-
-    if (player) {
-      const save = {
-        file: file.substring(0, file.indexOf(".json")),
-        player: player,
-      };
-
-      saves.push(save);
-    }
-  });
-
-  return res.status(200).json(saves);
-}
-
-async function getSavedData(req, res) {
-  const board = req.params.board;
-  const save = req.params.save;
-
-  const savedData = readJSONFile(`./data/${board}/saves/${save}.json`);
-
-  if (!savedData) {
+  if (!board) {
     return res
       .status(404)
-      .send({ error: true, message: "O ficheiro não existe" });
+      .json({ error: true, message: "Tabuleiro não encontrado" });
   }
 
-  return res.status(200).json(savedData);
+  const saves = await Save.find({ boardId: board._id });
+  const playerSaves = [];
+
+  for (let i = 0; i < saves.length; i++) {
+    const player = await Player.findOne({
+      userId: userId,
+      saveId: saves[i]._id,
+    });
+
+    if (player) {
+      playerSaves.push(player);
+    }
+  }
+
+  return res.status(200).json(playerSaves);
 }
 
-function updateSavedData(req, res) {
-  const { board, save, savedData } = req.body;
+async function getPlayers(req, res) {
+  const boardName = req.params.board;
+  const saveName = req.params.save;
 
-  writeJSONFile(`./data/${board}/saves/${save}.json`, savedData);
+  const board = await Board.findOne({ name: boardName });
+
+  if (!board) {
+    return res
+      .status(404)
+      .json({ error: true, message: "Tabuleiro não encontrado" });
+  }
+
+  const save = await Save.findOne({ name: saveName });
+
+  if (!save) {
+    return res
+      .status(404)
+      .json({ error: true, message: "Ficheiro não encontrado" });
+  }
+
+  const players = await Player.find({ saveId: save._id });
+  const playersArray = JSON.parse(JSON.stringify(players));
+
+  for (let i = 0; i < playersArray.length; i++) {
+    const user = await User.findById(playersArray[i].userId);
+
+    if (user) {
+      playersArray[i].name = user.name;
+      playersArray[i].email = user.email;
+    }
+  }
+
+  return res.status(200).json(playersArray);
+}
+
+async function updatePlayers(req, res) {
+  const { players } = req.body;
+
+  for (let i = 0; i < players.length; i++) {
+    try {
+      await Player.findByIdAndUpdate(players[i]._id, players[i], {
+        upsert: true,
+      });
+    } catch (error) {
+      return res.status(400).json({ error: true, message: error });
+    }
+  }
 
   return res.status(200).send();
 }
 
 async function getSaves(req, res) {
-  const board = req.params.board;
+  const boardName = req.params.board;
 
-  const saveFiles = getFilesFromDir(`./data/${board}/saves/`);
-  let saves = [];
+  const board = await Board.findOne({ name: boardName });
 
-  saveFiles.forEach((file) => {
-    const players = readJSONFile(`./data/${board}/saves/${file}`);
+  if (!board) {
+    return res
+      .status(404)
+      .json({ error: true, message: "Tabuleiro não encontrado" });
+  }
 
-    const save = {
-      file: file,
-      numPlayers: players.length,
-    };
+  const saves = await Save.find({ boardId: board._id });
+  const savesArray = JSON.parse(JSON.stringify(saves));
 
-    saves.push(save);
-  });
+  for (let i = 0; i < savesArray.length; i++) {
+    savesArray[i].players = (
+      await Player.find({ saveId: savesArray[i]._id })
+    ).length;
+  }
 
-  return res.status(200).json(saves);
+  return res.status(200).json(savesArray);
 }
 
 async function getBoard(req, res) {
@@ -472,17 +512,29 @@ async function getBoard(req, res) {
   const tilesArray = JSON.parse(JSON.stringify(tiles));
 
   for (let i = 0; i < tilesArray.length; i++) {
-    if (tilesArray[i].type === "groupProperty" || tilesArray[i].type === "pay") {
-      tilesArray[i].questions = (await Question.find({tileId: tilesArray[i]._id})).length;
-    }
-    else if (tilesArray[i].type === "community") {
-      tilesArray[i].cards = (await Card.find({type: "deck", subtype: "community", boardId: board._id})).length;
-    }
-    else if (tilesArray[i].type === "chance") {
-      tilesArray[i].cards = (await Card.find({type: "deck", subtype: "chance", boardId: board._id})).length;
-    }
-    else if (tilesArray[i].type === "train") {
-      tilesArray[i].cards = (await Card.find({type: "train", tileId: tilesArray[i]._id})).length;
+    if (
+      tilesArray[i].type === "groupProperty" ||
+      tilesArray[i].type === "pay"
+    ) {
+      tilesArray[i].questions = (
+        await Question.find({ tileId: tilesArray[i]._id })
+      ).length;
+    } else if (tilesArray[i].type === "community") {
+      tilesArray[i].cards = (
+        await Card.find({
+          type: "deck",
+          subtype: "community",
+          boardId: board._id,
+        })
+      ).length;
+    } else if (tilesArray[i].type === "chance") {
+      tilesArray[i].cards = (
+        await Card.find({ type: "deck", subtype: "chance", boardId: board._id })
+      ).length;
+    } else if (tilesArray[i].type === "train") {
+      tilesArray[i].cards = (
+        await Card.find({ type: "train", tileId: tilesArray[i]._id })
+      ).length;
     }
   }
 
@@ -597,9 +649,7 @@ async function newDeckCard(req, res) {
     info: info,
   }).catch((error) => {
     console.log(error);
-    return res
-      .status(400)
-      .send({ error: true, message: error });
+    return res.status(400).send({ error: true, message: error });
   });
 
   return res.status(201).send();
@@ -662,9 +712,7 @@ async function newTrainCard(req, res) {
     content: content,
   }).catch((error) => {
     console.log(error);
-    return res
-      .status(400)
-      .send({ error: true, message: error });
+    return res.status(400).send({ error: true, message: error });
   });
 
   return res.status(201).send();
@@ -732,8 +780,8 @@ module.exports = {
   sendContentToFrontend,
   updatePlayerBadges,
   getPlayerSavedData,
-  getSavedData,
-  updateSavedData,
+  getPlayers,
+  updatePlayers,
   getSaves,
   getBoard,
   updateBoardData,
