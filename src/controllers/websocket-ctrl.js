@@ -43,8 +43,7 @@ async function processMessage(ws, data) {
         ws,
         dataReceived["userId"],
         dataReceived["board"],
-        dataReceived["saveFile"],
-        `./data/${dataReceived["board"]}/saves/${dataReceived["saveFile"]}.json`
+        dataReceived["saveFile"]
       );
       break;
     case "join game":
@@ -70,7 +69,7 @@ async function processMessage(ws, data) {
       );
       break;
     case "save":
-      gameController.saveGame(frontendWSs, dataReceived);
+      await gameController.saveGame(frontendWSs, dataReceived);
       break;
     case "finish turn":
       gameController.sendFinishTurnToFrontend(

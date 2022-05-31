@@ -1,22 +1,25 @@
-const { readJSONFile, getFilesFromDir } = require("../utils/file-utils");
+const Badge = require("../models/Badge");
+const Board = require("../models/Board");
+const Card = require("../models/Card");
+const Question = require("../models/Question");
+const Save = require("../models/Save");
+const Tile = require("../models/Tile");
 
 async function loadBoard(ws, dataReceived) {
-  const board = readJSONFile(
-    "./data/" + dataReceived.board + "/BoardData.json"
-  );
+  const board = await Board.findOne({ name: dataReceived.board });
+  const tiles = await Tile.find({ boardId: board._id });
 
   const dataToSend = {
     type: "board",
-    board: board,
+    board: tiles,
   };
 
   ws.send(JSON.stringify(dataToSend));
 }
 
 async function loadQuestions(ws, dataReceived) {
-  const questions = readJSONFile(
-    "./data/" + dataReceived.board + "/Questions.json"
-  );
+  const board = await Board.findOne({ name: dataReceived.board });
+  const questions = await Question.find({ boardId: board._id });
 
   const dataToSend = {
     type: "questions",
@@ -27,7 +30,8 @@ async function loadQuestions(ws, dataReceived) {
 }
 
 async function loadCards(ws, dataReceived) {
-  const cards = readJSONFile("./data/" + dataReceived.board + "/Cards.json");
+  const board = await Board.findOne({ name: dataReceived.board });
+  const cards = await Card.find({ boardId: board._id });
 
   const dataToSend = {
     type: "cards",
@@ -38,19 +42,20 @@ async function loadCards(ws, dataReceived) {
 }
 
 async function loadSaves(ws, dataReceived) {
-  const saveFiles = getFilesFromDir(`./data/${dataReceived.board}/saves/`);
+  const board = await Board.findOne({ name: dataReceived.board });
+  const saves = await Save.find({ boardId: board._id });
 
   const dataToSend = {
     type: "save files",
-    files: saveFiles,
+    files: saves,
   };
 
   ws.send(JSON.stringify(dataToSend));
 }
 
 async function loadBadges(ws, dataReceived) {
-  const badges = readJSONFile(`./data/${dataReceived.board}/Badges.json`);
-  badges.sort((a, b) => a.multiplier - b.multiplier);
+  const board = await Board.findOne({ name: dataReceived.board });
+  const badges = await Badge.find({ boardId: board._id }).sort("multiplier");
 
   const dataToSend = {
     type: "badges",

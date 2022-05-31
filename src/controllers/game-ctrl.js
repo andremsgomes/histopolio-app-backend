@@ -8,14 +8,6 @@ const Save = require("../models/Save");
 const Tile = require("../models/Tile");
 const User = require("../models/User");
 
-const {
-  readJSONFile,
-  writeJSONFile,
-  fileExists,
-  getFilesFromDir,
-} = require("../utils/file-utils");
-
-let gameSaveFilePath = "";
 let gameBoard = "";
 let gameSave = "";
 let gameStarted = false;
@@ -29,30 +21,38 @@ async function sendQuestionToFrontend(frontendWS, dataReceived) {
 async function sendGameStatusToFrontend(
   frontendWS,
   userId,
-  board,
-  save,
-  saveFilePath
+  boardName,
+  saveName
 ) {
-  if (save.length > 0) {
-    let playerData = await getPlayerData(saveFilePath, userId);
+  if (saveName.length > 0) {
+    const board = await Board.findOne({ name: boardName });
+    const save = await Save.findOne({ boardId: board._id, name: saveName });
+    const player = await Player.findOne({ saveId: save._id, userId: userId });
+    let playerData = null;
 
-    if (!playerData) {
+    if (!player) {
       playerData = {
         points: 20,
         position: 0,
         badges: [],
       };
+    } else {
+      playerData = {
+        points: player.points,
+        position: player.boardPosition,
+        badges: player.badges,
+      };
     }
 
-    const rank = await getRank(userId, saveFilePath);
-    playerData["rank"] = rank;
+    playerData["rank"] = await getRank(userId, boardName, saveName);
 
     const dataToSend = {
       type: "game status",
-      gameStarted: gameStarted && board === gameBoard && save === gameSave,
+      gameStarted:
+        gameStarted && boardName === gameBoard && saveName === gameSave,
       playerData: playerData,
-      board: board,
-      save: save,
+      board: boardName,
+      save: saveName,
     };
 
     if (frontendWS != null && frontendWS.readyState === WebSocket.OPEN) {
@@ -68,9 +68,9 @@ async function sendGameStatusToFrontend(
 
     const dataToSend = {
       type: "game status",
-      gameStarted: gameStarted && board === gameBoard,
+      gameStarted: gameStarted && boardName === gameBoard,
       playerData: playerData,
-      board: board,
+      board: boardName,
       save: gameSave,
     };
 
@@ -83,26 +83,18 @@ async function sendGameStatusToFrontend(
 async function resendGameStatusIfStarted(frontendWSs) {
   if (gameStarted) {
     for (id of frontendWSs.keys()) {
-      sendGameStatusToFrontend(
-        frontendWSs.get(id),
-        id,
-        gameBoard,
-        gameSave,
-        gameSaveFilePath
-      );
+      sendGameStatusToFrontend(frontendWSs.get(id), id, gameBoard, gameSave);
     }
   }
 }
 
-async function getRank(userId, saveFilePath) {
-  const players = readJSONFile(saveFilePath);
-
-  if (!players) return 0;
-
-  players.sort((a, b) => b.points - a.points);
+async function getRank(userId, boardName, saveName) {
+  const board = await Board.findOne({ name: boardName });
+  const save = await Save.findOne({ boardId: board._id, name: saveName });
+  const players = await Player.find({ saveId: save._id }).sort("points");
 
   for (let i = 0; i < players.length; i++) {
-    if (players[i].userId === userId) return i + 1;
+    if (players[i].userId == userId) return i + 1;
   }
 
   return 0;
@@ -112,13 +104,7 @@ async function setGameReady(frontendWSs) {
   gameStarted = true;
 
   for (id of frontendWSs.keys()) {
-    sendGameStatusToFrontend(
-      frontendWSs.get(id),
-      id,
-      gameBoard,
-      gameSave,
-      gameSaveFilePath
-    );
+    sendGameStatusToFrontend(frontendWSs.get(id), id, gameBoard, gameSave);
   }
 }
 
@@ -136,7 +122,6 @@ async function sendEndGameToFrontend(frontendWSs) {
 }
 
 async function endGame() {
-  gameSaveFilePath = "";
   gameBoard = "";
   gameSave = "";
   gameStarted = false;
@@ -144,47 +129,43 @@ async function endGame() {
   console.log("Game ended");
 }
 
-function addPlayerToGame(unityWS, dataReceived) {
-  let player = getPlayerData(gameSaveFilePath, dataReceived["userId"]);
+async function addPlayerToGame(unityWS, dataReceived) {
+  const board = await Board.findOne({ name: gameBoard });
+  const save = await Save.findOne({ boardId: board._id, name: gameSave });
+  let player = await Player.findOne({
+    saveId: save._id,
+    userId: dataReceived["userId"],
+  });
 
   if (!player) {
-    player = {
+    player = await Player.create({
       userId: dataReceived["userId"],
-      name: dataReceived["name"],
-      email: dataReceived["email"],
+      saveId: save._id,
       points: 20,
-      position: 0,
-      numTurns: 0,
+      boardPosition: 0,
+      turns: 0,
       totalAnswers: 0,
       correctAnswers: 0,
       badges: [],
       finishedBoard: false,
-    };
-
-    let players = readJSONFile(gameSaveFilePath);
-    players.push(player);
-    writeJSONFile(gameSaveFilePath, players);
+    });
   }
 
   let multiplier = 1;
-  const badges = readJSONFile(`./data/${dataReceived["board"]}/Badges.json`);
+  for (let i = 0; i < player.badges.length; i++) {
+    const badge = await Badge.findById(player.badges[i]);
 
-  if (badges) {
-    player.badges.forEach((userBadge) => {
-      badge = badges.find((b) => b.id === userBadge);
-
-      if (badge && badge.multiplier > multiplier) multiplier = badge.multiplier;
-    });
+    if (badge && badge.multiplier > multiplier) multiplier = badge.multiplier;
   }
 
   const dataToSend = {
     type: "join game",
     userId: player.userId,
-    name: player.name,
+    name: dataReceived["name"],
     avatar: dataReceived["avatar"],
     points: player.points,
-    position: player.position,
-    numTurns: player.numTurns,
+    position: player.boardPosition,
+    numTurns: player.turns,
     totalAnswers: player.totalAnswers,
     correctAnswers: player.correctAnswers,
     badges: player.badges,
@@ -244,60 +225,64 @@ async function sendInfoShownToFrontend(frontendWS, dataReceived) {
 }
 
 async function loadGame(unityWS, dataReceived) {
-  gameSaveFilePath = `./data/${dataReceived["board"]}/saves/${dataReceived["file"]}`;
   gameBoard = dataReceived["board"];
-  gameSave = dataReceived["file"].substring(
-    0,
-    dataReceived["file"].indexOf(".json")
-  );
+  gameSave = dataReceived["file"];
 
-  if (!fileExists(gameSaveFilePath)) {
-    writeJSONFile(gameSaveFilePath, []);
-    console.log("New Game Started!");
-  } else console.log("Game Loaded!");
+  const board = await Board.findOne({ name: gameBoard });
+  let save = await Save.findOne({ boardId: board._id, name: gameSave });
 
-  const players = readJSONFile(gameSaveFilePath);
-  const users = readJSONFile("./data/Users.json");
+  if (!save) {
+    save = await Save.create({
+      boardId: board._id,
+      name: gameSave,
+    });
+  }
 
-  players.forEach((player) => {
-    player["avatar"] = users.find((user) => user.id === player.userId).avatar;
-  });
+  const players = await Player.find({ saveId: save._id });
+  const playersArray = JSON.parse(JSON.stringify(players));
+
+  for (let i = 0; i < playersArray.length; i++) {
+    const user = await User.findById(playersArray[i].userId);
+
+    if (user) {
+      playersArray[i]["name"] = user.name;
+      playersArray[i]["email"] = user.email;
+      playersArray[i]["avatar"] = user.avatarUrl;
+    }
+  }
 
   const dataToSend = {
     type: "players",
-    players: players,
+    players: playersArray,
   };
 
   unityWS.send(JSON.stringify(dataToSend));
 }
 
-function saveGame(frontendWSs, dataReceived) {
-  const players = readJSONFile(gameSaveFilePath);
-
-  const newSavedData = players.map((player) => {
-    if (player.userId === dataReceived["userId"]) {
-      player.points = dataReceived["points"];
-      player.position = dataReceived["position"];
-      player.numTurns = dataReceived["numTurns"];
-      player.totalAnswers = dataReceived["totalAnswers"];
-      player.correctAnswers = dataReceived["correctAnswers"];
-      player.finishedBoard = dataReceived["finishedBoard"];
-    }
-
-    return player;
+async function saveGame(frontendWSs, dataReceived) {
+  const board = await Board.findOne({ name: gameBoard });
+  const save = await Save.findOne({ boardId: board._id, name: gameSave });
+  const player = await Player.findOne({
+    userId: dataReceived["userId"],
+    saveId: save._id,
   });
 
-  writeJSONFile(gameSaveFilePath, newSavedData);
+  player.points = dataReceived["points"];
+  player.boardPosition = dataReceived["position"];
+  player.turns = dataReceived["numTurns"];
+  player.totalAnswers = dataReceived["totalAnswers"];
+  player.correctAnswers = dataReceived["correctAnswers"];
+  player.finishedBoard = dataReceived["finishedBoard"];
+
+  await player.save();
 
   console.log("Game Saved!");
 
-  sendUpdateToFrontend(frontendWSs, gameSaveFilePath);
+  sendUpdateToFrontend(frontendWSs, save._id);
 }
 
-async function sendUpdateToFrontend(frontendWSs, saveFile) {
-  const players = readJSONFile(saveFile);
-
-  players.sort((a, b) => b.points - a.points);
+async function sendUpdateToFrontend(frontendWSs, saveId) {
+  const players = await Player.find({ saveId: saveId }).sort("points");
 
   let rank = 1;
 
@@ -334,39 +319,28 @@ async function sendContentToFrontend(frontendWS, dataReceived) {
   }
 }
 
-function updatePlayerBadges(unityWS, frontendWSs, dataReceived) {
-  const badges = readJSONFile(`./data/${dataReceived.board}/Badges.json`);
-  const badgePurchased = badges.find(
-    (badge) => badge.id === dataReceived.badgeId
-  );
-
-  const players = readJSONFile(
-    `./data/${dataReceived.board}/saves/${dataReceived.save}.json`
-  );
-
-  players.forEach((player) => {
-    if (player.userId === dataReceived.userId) {
-      player.badges.push(badgePurchased.id);
-      player.points -= badgePurchased.cost;
-    }
+async function updatePlayerBadges(unityWS, frontendWSs, dataReceived) {
+  const badge = await Badge.findById(dataReceived.badgeId);
+  const board = await Board.findOne({ name: dataReceived.board });
+  const save = await Save.findOne({
+    boardId: board._id,
+    name: dataReceived.save,
+  });
+  const player = await Player.findOne({
+    userId: dataReceived.userId,
+    saveId: save._id,
   });
 
-  writeJSONFile(
-    `./data/${dataReceived.board}/saves/${dataReceived.save}.json`,
-    players
-  );
+  player.badges.push(badge._id);
+  player.points -= badge.cost;
+  await player.save();
 
   let multiplier = 1;
-  const player = getPlayerData(
-    `./data/${dataReceived.board}/saves/${dataReceived.save}.json`,
-    dataReceived.userId
-  );
-
-  player.badges.forEach((userBadge) => {
-    badge = badges.find((b) => b.id === userBadge);
+  for (let i = 0; i < player.badges.length; i++) {
+    const badge = await Badge.findById(player.badges[i]);
 
     if (badge && badge.multiplier > multiplier) multiplier = badge.multiplier;
-  });
+  }
 
   dataToSend = {
     type: "new badge",
@@ -380,18 +354,7 @@ function updatePlayerBadges(unityWS, frontendWSs, dataReceived) {
     unityWS.send(JSON.stringify(dataToSend));
   }
 
-  sendUpdateToFrontend(
-    frontendWSs,
-    `./data/${dataReceived.board}/saves/${dataReceived.save}.json`
-  );
-}
-
-function getPlayerData(file, userId) {
-  const savedData = readJSONFile(file);
-
-  if (!savedData) return null;
-
-  return savedData.find((player) => player.userId == userId);
+  sendUpdateToFrontend(frontendWSs, save._id);
 }
 
 async function getPlayerSavedData(req, res) {
@@ -416,7 +379,9 @@ async function getPlayerSavedData(req, res) {
     });
 
     if (player) {
-      playerSaves.push(player);
+      const playerArray = JSON.parse(JSON.stringify(player));
+      playerArray["saveName"] = saves[i].name;
+      playerSaves.push(playerArray);
     }
   }
 
