@@ -632,6 +632,16 @@ async function seedQuestions(boardId) {
   });
 
   await Question.create({
+    tileId: tiles[28]._id,
+    question:
+      "O epitélio caracteriza-se por ter abundante matriz extracelular.",
+    answers: ["Verdadeiro", "Falso"],
+    correctAnswer: 2,
+  }).catch((error) => {
+    console.log(error);
+  });
+
+  await Question.create({
     tileId: tiles[29]._id,
     question: "Nesta imagem está representado músculo",
     image: "https://www.linkpicture.com/q/casa26pergunta2.png",
@@ -702,6 +712,16 @@ async function seedQuestions(boardId) {
       "estriado cardíaco",
     ],
     correctAnswer: 3,
+  }).catch((error) => {
+    console.log(error);
+  });
+
+  await Question.create({
+    tileId: tiles[38]._id,
+    question:
+      "O epitélio caracteriza-se por ter abundante matriz extracelular.",
+    answers: ["Verdadeiro", "Falso"],
+    correctAnswer: 2,
   }).catch((error) => {
     console.log(error);
   });
