@@ -4,7 +4,7 @@ const Schema = mongoose.Schema;
 const BadgeSchema = new Schema(
   {
     boardId: { type: Schema.ObjectId, required: true },
-    name: { type: String, required: true },
+    name: { type: String, unique: true, required: true },
     multiplier: { type: Number, required: true },
     cost: { type: Number, required: true },
     image: { type: String, required: true },
