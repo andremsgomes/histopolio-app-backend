@@ -32,10 +32,21 @@ async function loadQuestions(ws, dataReceived) {
 async function loadCards(ws, dataReceived) {
   const board = await Board.findOne({ name: dataReceived.board });
   const cards = await Card.find({ boardId: board._id });
+  const cardsArray = JSON.parse(JSON.stringify(cards));
+
+  const tiles = await Tile.find({ boardId: board._id });
+
+  for (let i = 0; i < tiles.length; i++) {
+    const trainCards = await Card.find({ tileId: tiles[i]._id });
+    
+    trainCards.forEach((card) => {
+      cardsArray.push(card);
+    })
+  }
 
   const dataToSend = {
     type: "cards",
-    cards: cards,
+    cards: cardsArray,
   };
 
   ws.send(JSON.stringify(dataToSend));
