@@ -593,6 +593,23 @@ async function newQuestion(req, res) {
     });
 }
 
+async function getDeckCards(req, res) {
+  const boardName = req.params.board;
+  const deck = req.params.deck;
+
+  const board = await Board.findOne({ name: boardName });
+
+  if (!board) {
+    return res
+      .status(404)
+      .send({ error: true, message: "Tabuleiro não encontrado" });
+  }
+
+  const cards = await Card.find({ boardId: board._id, type: "deck", subtype: deck });
+
+  return res.status(200).json(cards);
+}
+
 async function newDeckCard(req, res) {
   const { boardName, deck, info, points, action, actionValue } = req.body;
 
@@ -752,6 +769,7 @@ module.exports = {
   updateBoardData,
   getQuestions,
   newQuestion,
+  getDeckCards,
   newDeckCard,
   getTrainCards,
   newTrainCard,
