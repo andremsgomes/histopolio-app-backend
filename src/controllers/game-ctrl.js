@@ -290,11 +290,11 @@ async function sendUpdateToFrontend(frontendWSs, saveId) {
     const dataToSend = {
       type: "update",
       points: player.points,
-      position: player.position,
+      position: player.boardPosition,
       rank: rank++,
     };
 
-    ws = frontendWSs.get(player.userId);
+    ws = frontendWSs.get(player.userId.toString());
 
     if (ws && ws.readyState === WebSocket.OPEN)
       ws.send(JSON.stringify(dataToSend));
