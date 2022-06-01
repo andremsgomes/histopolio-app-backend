@@ -16,18 +16,18 @@ async function seedCards(boardId) {
     console.log(error);
   });
 
-  await Card.create({
-    type: "deck",
-    subtype: "community",
-    boardId: boardId,
-    points: 10,
-    action: "tile",
-    actionValue: "15",
-    info:
-      "Os vídeos da Estação de Treino estão sem som porque o narrador estava rouco! Avança ou Recua até à Estação do TECIDO CONJUNTIVO e edita o vídeo colocando-lhe a narração... Ganhas os pontos da Estação +10 por conseguires aquela voz de rádio!",
-  }).catch((error) => {
-    console.log(error);
-  });
+  // await Card.create({
+  //   type: "deck",
+  //   subtype: "community",
+  //   boardId: boardId,
+  //   points: 10,
+  //   action: "tile",
+  //   actionValue: "15",
+  //   info:
+  //     "Os vídeos da Estação de Treino estão sem som porque o narrador estava rouco! Avança ou Recua até à Estação do TECIDO CONJUNTIVO e edita o vídeo colocando-lhe a narração... Ganhas os pontos da Estação +10 por conseguires aquela voz de rádio!",
+  // }).catch((error) => {
+  //   console.log(error);
+  // });
 
   await Card.create({
     type: "deck",
@@ -42,18 +42,18 @@ async function seedCards(boardId) {
     console.log(error);
   });
 
-  await Card.create({
-    type: "deck",
-    subtype: "community",
-    boardId: boardId,
-    points: 10,
-    action: "tile",
-    actionValue: "5",
-    info:
-      "Os vídeos da Estação de Treino estão sem som porque o narrador estava rouco! Avança ou Recua até à Estação do TECIDO EPITELIAL e edita o vídeo colocando-lhe a narração... Ganhas os pontos da Estação +10 por conseguires aquela voz de rádio!",
-  }).catch((error) => {
-    console.log(error);
-  });
+  // await Card.create({
+  //   type: "deck",
+  //   subtype: "community",
+  //   boardId: boardId,
+  //   points: 10,
+  //   action: "tile",
+  //   actionValue: "5",
+  //   info:
+  //     "Os vídeos da Estação de Treino estão sem som porque o narrador estava rouco! Avança ou Recua até à Estação do TECIDO EPITELIAL e edita o vídeo colocando-lhe a narração... Ganhas os pontos da Estação +10 por conseguires aquela voz de rádio!",
+  // }).catch((error) => {
+  //   console.log(error);
+  // });
 
   await Card.create({
     type: "deck",
