@@ -91,7 +91,7 @@ async function resendGameStatusIfStarted(frontendWSs) {
 async function getRank(userId, boardName, saveName) {
   const board = await Board.findOne({ name: boardName });
   const save = await Save.findOne({ boardId: board._id, name: saveName });
-  const players = await Player.find({ saveId: save._id }).sort("points");
+  const players = await Player.find({ saveId: save._id }).sort({"points" : "descending"});
 
   for (let i = 0; i < players.length; i++) {
     if (players[i].userId == userId) return i + 1;
