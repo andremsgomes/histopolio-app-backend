@@ -282,7 +282,7 @@ async function saveGame(frontendWSs, dataReceived) {
 }
 
 async function sendUpdateToFrontend(frontendWSs, saveId) {
-  const players = await Player.find({ saveId: saveId }).sort("points");
+  const players = await Player.find({ saveId: saveId }).sort({"points" : "descending"});
 
   let rank = 1;
 
