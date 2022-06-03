@@ -75,7 +75,34 @@ async function login(req, res) {
   return res.status(200).json(returnUser);
 }
 
+async function updateProfile(req, res) {
+  const { userId, name, avatarToSend, email } = req.body;
+
+  if (!(userId, name && avatarToSend && email)) {
+    return res
+      .status(400)
+      .send({ error: true, message: "Dados mal formatados" });
+  }
+
+  const user = await User.findById(userId);
+
+  if (!user) {
+    return res
+      .status(404)
+      .send({ error: true, message: "Utilizador não encontrado" });
+  }
+
+  user.name = name;
+  user.email = email;
+  user.avatarUrl = avatarToSend;
+
+  await user.save();
+
+  return res.status(200).send();
+}
+
 module.exports = {
   signup,
   login,
+  updateProfile,
 };
