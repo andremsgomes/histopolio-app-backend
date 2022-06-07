@@ -548,6 +548,13 @@ async function getQuestions(req, res) {
   return res.status(200).json(questions);
 }
 
+async function getQuestion(req, res) {
+  const id = req.params.id;
+  const question = await Question.findById(id);
+
+  return res.status(200).json(question);
+}
+
 async function newQuestion(req, res) {
   const {
     boardName,
@@ -591,6 +598,27 @@ async function newQuestion(req, res) {
       console.log(error);
       return res.status(404).send({ error: true, message: error });
     });
+}
+
+async function updateQuestion(req, res) {
+  const { id, question, image, answers, correctAnswer } = req.body;
+
+  const questionObject = await Question.findById(id);
+
+  if (!questionObject) {
+    return res
+      .status(404)
+      .send({ error: true, message: "Pergunta não encontrada" });
+  }
+
+  questionObject.question = question;
+  questionObject.image = image;
+  questionObject.answers = answers;
+  questionObject.correctAnswer = correctAnswer;
+
+  await questionObject.save();
+
+  return res.status(200).send();
 }
 
 async function getDeckCards(req, res) {
@@ -768,7 +796,9 @@ module.exports = {
   getBoard,
   updateBoardData,
   getQuestions,
+  getQuestion,
   newQuestion,
+  updateQuestion,
   getDeckCards,
   newDeckCard,
   getTrainCards,
