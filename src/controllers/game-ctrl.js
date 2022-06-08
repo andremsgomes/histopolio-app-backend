@@ -91,7 +91,9 @@ async function resendGameStatusIfStarted(frontendWSs) {
 async function getRank(userId, boardName, saveName) {
   const board = await Board.findOne({ name: boardName });
   const save = await Save.findOne({ boardId: board._id, name: saveName });
-  const players = await Player.find({ saveId: save._id }).sort({"points" : "descending"});
+  const players = await Player.find({ saveId: save._id }).sort({
+    points: "descending",
+  });
 
   for (let i = 0; i < players.length; i++) {
     if (players[i].userId == userId) return i + 1;
@@ -282,7 +284,9 @@ async function saveGame(frontendWSs, dataReceived) {
 }
 
 async function sendUpdateToFrontend(frontendWSs, saveId) {
-  const players = await Player.find({ saveId: saveId }).sort({"points" : "descending"});
+  const players = await Player.find({ saveId: saveId }).sort({
+    points: "descending",
+  });
 
   let rank = 1;
 
@@ -621,6 +625,17 @@ async function updateQuestion(req, res) {
   return res.status(200).send();
 }
 
+async function deleteQuestion(req, res) {
+  const { id } = req.body;
+
+  await Question.deleteOne({ _id: id }).catch((error) => {
+    console.log(error);
+    return res.status(400).send({ error: true, message: "Erro interno" });
+  });
+
+  return res.status(200).send();
+}
+
 async function getDeckCards(req, res) {
   const boardName = req.params.board;
   const deck = req.params.deck;
@@ -633,7 +648,11 @@ async function getDeckCards(req, res) {
       .send({ error: true, message: "Tabuleiro não encontrado" });
   }
 
-  const cards = await Card.find({ boardId: board._id, type: "deck", subtype: deck });
+  const cards = await Card.find({
+    boardId: board._id,
+    type: "deck",
+    subtype: deck,
+  });
 
   return res.status(200).json(cards);
 }
@@ -799,6 +818,7 @@ module.exports = {
   getQuestion,
   newQuestion,
   updateQuestion,
+  deleteQuestion,
   getDeckCards,
   newDeckCard,
   getTrainCards,

@@ -9,6 +9,7 @@ router.get("/data/:board/:tile/questions", gameController.getQuestions);
 router.get("/data/question/:id", gameController.getQuestion);
 router.post("/data/questions/new", gameController.newQuestion);
 router.post("/data/question/update", gameController.updateQuestion);
+router.post("/data/question/delete", gameController.deleteQuestion);
 
 router.get("/data/:board/deck_cards/:deck", gameController.getDeckCards);
 router.post("/data/cards/deck/new", gameController.newDeckCard);
