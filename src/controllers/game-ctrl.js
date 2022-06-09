@@ -466,6 +466,12 @@ async function getSaves(req, res) {
   return res.status(200).json(savesArray);
 }
 
+async function getBoards(_, res) {
+  const boards = await Board.find();
+
+  return res.status(200).json(boards);
+}
+
 async function getBoard(req, res) {
   const boardName = req.params.board;
 
@@ -812,6 +818,7 @@ module.exports = {
   getPlayers,
   updatePlayers,
   getSaves,
+  getBoards,
   getBoard,
   updateBoardData,
   getQuestions,

@@ -10,6 +10,8 @@ async function seedBoards() {
   let board = null;
   await Board.create({
     name: "Histopólio",
+    description: "Um tabuleiro sobre Histologia.",
+    image: "https://www.linkpicture.com/q/histopolio-logo.png",
   })
     .then((response) => {
       board = response;
