@@ -14,9 +14,13 @@ router.post("/data/question/delete", gameController.deleteQuestion);
 
 router.get("/data/:board/deck_cards/:deck", gameController.getDeckCards);
 router.post("/data/cards/deck/new", gameController.newDeckCard);
+router.post("/data/deck_card/update", gameController.updateDeckCard);
 
 router.get("/data/:board/:tile/train_cards", gameController.getTrainCards);
 router.post("/data/cards/train_cards/new", gameController.newTrainCard);
+
+router.get("/data/card/:id", gameController.getCard);
+router.post("/data/card/delete", gameController.deleteCard);
 
 router.get("/data/:board/badges", gameController.getBadges);
 router.post("/data/badges/new", gameController.newBadge);

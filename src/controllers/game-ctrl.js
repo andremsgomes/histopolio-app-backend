@@ -690,6 +690,28 @@ async function newDeckCard(req, res) {
   return res.status(201).send();
 }
 
+async function updateDeckCard(req, res) {
+  const { id, deck, info, points, action, actionValue } = req.body;
+
+  const card = await Card.findById(id);
+
+  if (!card) {
+    return res
+      .status(404)
+      .send({ error: true, message: "Cart não encontrada" });
+  }
+
+  card.subtype = deck;
+  card.info = info;
+  card.points = points;
+  card.action = action;
+  card.actionValue = actionValue;
+
+  await card.save();
+
+  return res.status(200).send();
+}
+
 async function getTrainCards(req, res) {
   const boardName = req.params.board;
   const boardPosition = parseInt(req.params.tile);
@@ -751,6 +773,24 @@ async function newTrainCard(req, res) {
   });
 
   return res.status(201).send();
+}
+
+async function getCard(req, res) {
+  const id = req.params.id;
+  const card = await Card.findById(id);
+
+  return res.status(200).json(card);
+}
+
+async function deleteCard(req, res) {
+  const { id } = req.body;
+
+  await Card.deleteOne({ _id: id }).catch((error) => {
+    console.log(error);
+    return res.status(400).send({ error: true, message: "Erro interno" });
+  });
+
+  return res.status(200).send();
 }
 
 async function getBadges(req, res) {
@@ -828,8 +868,11 @@ module.exports = {
   deleteQuestion,
   getDeckCards,
   newDeckCard,
+  updateDeckCard,
   getTrainCards,
   newTrainCard,
+  getCard,
+  deleteCard,
   getBadges,
   newBadge,
 };
