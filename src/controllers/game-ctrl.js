@@ -698,7 +698,7 @@ async function updateDeckCard(req, res) {
   if (!card) {
     return res
       .status(404)
-      .send({ error: true, message: "Cart não encontrada" });
+      .send({ error: true, message: "Carta não encontrada" });
   }
 
   card.subtype = deck;
@@ -773,6 +773,25 @@ async function newTrainCard(req, res) {
   });
 
   return res.status(201).send();
+}
+
+async function updateTrainCard(req, res) {
+  const { id, info, content } = req.body;
+
+  const card = await Card.findById(id);
+
+  if (!card) {
+    return res
+      .status(404)
+      .send({ error: true, message: "Carta não encontrada" });
+  }
+
+  card.info = info;
+  card.content = content;
+
+  await card.save();
+
+  return res.status(200).send();
 }
 
 async function getCard(req, res) {
@@ -871,6 +890,7 @@ module.exports = {
   updateDeckCard,
   getTrainCards,
   newTrainCard,
+  updateTrainCard,
   getCard,
   deleteCard,
   getBadges,

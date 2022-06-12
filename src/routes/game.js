@@ -18,6 +18,7 @@ router.post("/data/deck_card/update", gameController.updateDeckCard);
 
 router.get("/data/:board/:tile/train_cards", gameController.getTrainCards);
 router.post("/data/cards/train_cards/new", gameController.newTrainCard);
+router.post("/data/train_card/update", gameController.updateTrainCard);
 
 router.get("/data/card/:id", gameController.getCard);
 router.post("/data/card/delete", gameController.deleteCard);
