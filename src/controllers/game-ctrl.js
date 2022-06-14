@@ -828,6 +828,13 @@ async function getBadges(req, res) {
   return res.status(200).json(badges);
 }
 
+async function getBadge(req, res) {
+  const id = req.params.id;
+  const badge = await Badge.findById(id);
+
+  return res.status(200).json(badge);
+}
+
 async function newBadge(req, res) {
   const { boardName, name, image, multiplier, cost } = req.body;
 
@@ -852,6 +859,32 @@ async function newBadge(req, res) {
   });
 
   return res.status(201).send();
+}
+
+async function updateBadge(req, res) {
+  const { id, name, image, multiplier, cost } = req.body;
+
+  const badge = await Badge.findById(id);
+
+  badge.name = name;
+  badge.image = image;
+  badge.multiplier = multiplier;
+  badge.cost = cost;
+
+  await badge.save();
+
+  return res.status(200).send();
+}
+
+async function deleteBadge(req, res) {
+  const id = req.params.id;
+
+  await Badge.deleteOne({ _id: id }).catch((error) => {
+    console.log(error);
+    return res.status(400).send({ error: true, message: "Erro interno" });
+  });
+
+  return res.status(200).send();
 }
 
 module.exports = {
@@ -894,5 +927,8 @@ module.exports = {
   getCard,
   deleteCard,
   getBadges,
+  getBadge,
   newBadge,
+  updateBadge,
+  deleteBadge,
 };

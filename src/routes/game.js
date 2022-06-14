@@ -24,7 +24,10 @@ router.get("/data/card/:id", gameController.getCard);
 router.post("/data/card/delete", gameController.deleteCard);
 
 router.get("/data/:board/badges", gameController.getBadges);
+router.get("/data/badge/:id", gameController.getBadge);
 router.post("/data/badges/new", gameController.newBadge);
+router.put("/data/badge/update", gameController.updateBadge);
+router.delete("/data/badge/:id", gameController.deleteBadge);
 
 router.get("/data/:board/saves", gameController.getSaves);
 
