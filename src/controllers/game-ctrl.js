@@ -632,7 +632,7 @@ async function updateQuestion(req, res) {
 }
 
 async function deleteQuestion(req, res) {
-  const { id } = req.body;
+  const id = req.params.id;
 
   await Question.deleteOne({ _id: id }).catch((error) => {
     console.log(error);
@@ -802,7 +802,7 @@ async function getCard(req, res) {
 }
 
 async function deleteCard(req, res) {
-  const { id } = req.body;
+  const id = req.params.id;
 
   await Card.deleteOne({ _id: id }).catch((error) => {
     console.log(error);
