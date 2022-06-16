@@ -5,6 +5,8 @@ const Question = require("../models/Question");
 const Save = require("../models/Save");
 const Tile = require("../models/Tile");
 
+let unityMessages = [];
+
 async function loadBoard(ws, dataReceived) {
   const board = await Board.findOne({ name: dataReceived.board });
   const tiles = await Tile.find({ boardId: board._id });
@@ -14,7 +16,11 @@ async function loadBoard(ws, dataReceived) {
     board: tiles,
   };
 
-  ws.send(JSON.stringify(dataToSend));
+  if (ws != null && ws.readyState === WebSocket.OPEN) {
+    ws.send(JSON.stringify(dataToSend));
+  } else {
+    unityMessages.push(JSON.stringify(dataToSend));
+  }
 }
 
 async function loadQuestions(ws, dataReceived) {
@@ -26,7 +32,11 @@ async function loadQuestions(ws, dataReceived) {
     questions: questions,
   };
 
-  ws.send(JSON.stringify(dataToSend));
+  if (ws != null && ws.readyState === WebSocket.OPEN) {
+    ws.send(JSON.stringify(dataToSend));
+  } else {
+    unityMessages.push(JSON.stringify(dataToSend));
+  }
 }
 
 async function loadCards(ws, dataReceived) {
@@ -38,10 +48,10 @@ async function loadCards(ws, dataReceived) {
 
   for (let i = 0; i < tiles.length; i++) {
     const trainCards = await Card.find({ tileId: tiles[i]._id });
-    
+
     trainCards.forEach((card) => {
       cardsArray.push(card);
-    })
+    });
   }
 
   const dataToSend = {
@@ -49,7 +59,11 @@ async function loadCards(ws, dataReceived) {
     cards: cardsArray,
   };
 
-  ws.send(JSON.stringify(dataToSend));
+  if (ws != null && ws.readyState === WebSocket.OPEN) {
+    ws.send(JSON.stringify(dataToSend));
+  } else {
+    unityMessages.push(JSON.stringify(dataToSend));
+  }
 }
 
 async function loadSaves(ws, dataReceived) {
@@ -61,7 +75,11 @@ async function loadSaves(ws, dataReceived) {
     files: saves,
   };
 
-  ws.send(JSON.stringify(dataToSend));
+  if (ws != null && ws.readyState === WebSocket.OPEN) {
+    ws.send(JSON.stringify(dataToSend));
+  } else {
+    unityMessages.push(JSON.stringify(dataToSend));
+  }
 }
 
 async function loadBadges(ws, dataReceived) {
@@ -73,7 +91,25 @@ async function loadBadges(ws, dataReceived) {
     badges: badges,
   };
 
-  ws.send(JSON.stringify(dataToSend));
+  if (ws != null && ws.readyState === WebSocket.OPEN) {
+    ws.send(JSON.stringify(dataToSend));
+  } else {
+    unityMessages.push(JSON.stringify(dataToSend));
+  }
+}
+
+function sendPendingMessages(unityWS) {
+  while (unityMessages.length > 0) {
+    if (unityWS != null && unityWS.readyState === WebSocket.OPEN) {
+      unityWS.send(unityMessages.shift());
+    } else {
+      break;
+    }
+  }
+}
+
+function deletePendingMessages() {
+  unityMessages = [];
 }
 
 module.exports = {
@@ -82,4 +118,6 @@ module.exports = {
   loadCards,
   loadSaves,
   loadBadges,
+  sendPendingMessages,
+  deletePendingMessages,
 };

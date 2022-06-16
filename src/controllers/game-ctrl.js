@@ -122,7 +122,7 @@ async function endGame() {
   console.log("Game ended");
 }
 
-function sendPendingMessages() {
+function sendPendingMessages(unityWS) {
   while (unityMessages.length > 0) {
     if (unityWS != null && unityWS.readyState === WebSocket.OPEN) {
       unityWS.send(unityMessages.shift());

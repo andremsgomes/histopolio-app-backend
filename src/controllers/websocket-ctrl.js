@@ -116,7 +116,8 @@ async function authentication(ws, dataReceived) {
     unityWS = ws;
     unityDeadCount = 0;
     gameController.resendGameStatusIfStarted(frontendWSs);
-    gameController.sendPendingMessages();
+    loadController.sendPendingMessages(unityWS);
+    gameController.sendPendingMessages(unityWS);
     console.log("Unity connected");
   } else {
     frontendWSs.set(dataReceived["id"], ws);
@@ -136,11 +137,11 @@ async function checkWebSocktetsState() {
         unityWS.isAlive = false;
         unityDeadCount = 0;
         unityWS.send("ping");
-        gameController.sendPendingMessages();
       }
     } else {
       if (unityDeadCount < 10) {
         unityDeadCount++;
+        loadController.deletePendingMessages();
         gameController.sendEndGameToFrontend(frontendWSs);
 
         if (unityDeadCount === 10) {
