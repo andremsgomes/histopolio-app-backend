@@ -1,3 +1,4 @@
+const WebSocket = require("ws");
 const Badge = require("../models/Badge");
 const Board = require("../models/Board");
 const Card = require("../models/Card");
