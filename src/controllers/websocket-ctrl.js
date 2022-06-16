@@ -135,13 +135,14 @@ async function checkWebSocktetsState() {
         unityWS.isAlive = false;
         unityDeadCount = 0;
         unityWS.send("ping");
+        gameController.sendPendingMessages();
       }
     } else {
-      if (unityDeadCount < 3) {
+      if (unityDeadCount < 10) {
         unityDeadCount++;
         gameController.sendEndGameToFrontend(frontendWSs);
 
-        if (unityDeadCount == 3) {
+        if (unityDeadCount === 10) {
           gameController.endGame();
         }
       }

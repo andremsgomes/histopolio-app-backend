@@ -12,6 +12,7 @@ let gameBoard = "";
 let gameSave = "";
 let gameStarted = false;
 let sessionCode = null;
+let unityMessages = [];
 
 async function sendQuestionToFrontend(frontendWS, dataReceived) {
   if (frontendWS != null && frontendWS.readyState === WebSocket.OPEN) {
@@ -116,8 +117,19 @@ async function endGame() {
   gameSave = "";
   sessionCode = null;
   gameStarted = false;
+  unityMessages = [];
 
   console.log("Game ended");
+}
+
+function sendPendingMessages() {
+  while (unityMessages.length > 0) {
+    if (unityWS != null && unityWS.readyState === WebSocket.OPEN) {
+      unityWS.send(unityMessages.shift());
+    } else {
+      break;
+    }
+  }
 }
 
 async function addPlayerToGame(unityWS, dataReceived) {
@@ -152,6 +164,8 @@ async function addPlayerToGame(unityWS, dataReceived) {
 
   if (unityWS != null && unityWS.readyState === WebSocket.OPEN) {
     unityWS.send(JSON.stringify(dataToSend));
+  } else {
+    unityMessages.push(JSON.stringify(dataToSend));
   }
 }
 
@@ -163,6 +177,8 @@ async function removePlayerFromGame(unityWS, userId) {
 
   if (unityWS != null && unityWS.readyState === WebSocket.OPEN) {
     unityWS.send(JSON.stringify(dataToSend));
+  } else {
+    unityMessages.push(JSON.stringify(dataToSend));
   }
 }
 
@@ -192,6 +208,8 @@ async function sendDiceResultToUnity(unityWS, dataReceived) {
 
   if (unityWS != null && unityWS.readyState === WebSocket.OPEN) {
     unityWS.send(JSON.stringify(dataReceived));
+  } else {
+    unityMessages.push(JSON.stringify(dataToSend));
   }
 }
 
@@ -290,6 +308,8 @@ async function sendFinishTurnToFrontend(frontendWS, dataReceived) {
 async function sendDataToUnity(unityWS, dataReceived) {
   if (unityWS != null && unityWS.readyState === WebSocket.OPEN) {
     unityWS.send(JSON.stringify(dataReceived));
+  } else {
+    unityMessages.push(JSON.stringify(dataToSend));
   }
 }
 
@@ -332,6 +352,8 @@ async function updatePlayerBadges(unityWS, frontendWSs, dataReceived) {
 
   if (unityWS != null && unityWS.readyState === WebSocket.OPEN) {
     unityWS.send(JSON.stringify(dataToSend));
+  } else {
+    unityMessages.push(JSON.stringify(dataToSend));
   }
 
   sendUpdateToFrontend(frontendWSs, save._id);
@@ -952,6 +974,7 @@ module.exports = {
   setGameReady,
   sendEndGameToFrontend,
   endGame,
+  sendPendingMessages,
   sendTurnToFrontend,
   sendDiceToFrontend,
   sendDiceResultToUnity,
