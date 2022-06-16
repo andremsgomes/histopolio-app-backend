@@ -209,7 +209,7 @@ async function sendDiceResultToUnity(unityWS, dataReceived) {
   if (unityWS != null && unityWS.readyState === WebSocket.OPEN) {
     unityWS.send(JSON.stringify(dataReceived));
   } else {
-    unityMessages.push(JSON.stringify(dataToSend));
+    unityMessages.push(JSON.stringify(dataReceived));
   }
 }
 
@@ -309,7 +309,7 @@ async function sendDataToUnity(unityWS, dataReceived) {
   if (unityWS != null && unityWS.readyState === WebSocket.OPEN) {
     unityWS.send(JSON.stringify(dataReceived));
   } else {
-    unityMessages.push(JSON.stringify(dataToSend));
+    unityMessages.push(JSON.stringify(dataReceived));
   }
 }
 

@@ -136,6 +136,7 @@ async function checkWebSocktetsState() {
         unityWS.isAlive = false;
         unityDeadCount = 0;
         unityWS.send("ping");
+        gameController.sendPendingMessages();
       }
     } else {
       if (unityDeadCount < 10) {
