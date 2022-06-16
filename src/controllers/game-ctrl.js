@@ -11,6 +11,7 @@ const User = require("../models/User");
 let gameBoard = "";
 let gameSave = "";
 let gameStarted = false;
+let sessionCode = null;
 
 async function sendQuestionToFrontend(frontendWS, dataReceived) {
   if (frontendWS != null && frontendWS.readyState === WebSocket.OPEN) {
@@ -18,72 +19,59 @@ async function sendQuestionToFrontend(frontendWS, dataReceived) {
   }
 }
 
-async function sendGameStatusToFrontend(
-  frontendWS,
-  userId,
-  boardName,
-  saveName
-) {
-  if (saveName.length > 0) {
-    const board = await Board.findOne({ name: boardName });
-    const save = await Save.findOne({ boardId: board._id, name: saveName });
-    const player = await Player.findOne({ saveId: save._id, userId: userId });
-    let playerData = null;
+async function sendGameStatusToFrontend(frontendWS, userId, boardName) {
+  const board = await Board.findOne({ name: boardName });
+  const saves = await Save.find({ boardId: board._id });
+  let save = null;
+  let player = null;
 
-    if (!player) {
-      playerData = {
-        points: 20,
-        position: 0,
-        badges: [],
-      };
-    } else {
-      playerData = {
-        points: player.points,
-        position: player.boardPosition,
-        badges: player.badges,
-      };
+  for (let i = 0; i < saves.length; i++) {
+    player = await Player.findOne({ userId: userId, saveId: saves[i].id });
+
+    if (player) {
+      save = saves[i];
+      break;
     }
+  }
 
-    playerData["rank"] = await getRank(userId, boardName, saveName);
-
+  if (!player) {
     const dataToSend = {
-      type: "game status",
-      gameStarted:
-        gameStarted && boardName === gameBoard && saveName === gameSave,
-      playerData: playerData,
-      board: boardName,
-      save: saveName,
+      type: "redirect back",
     };
 
     if (frontendWS != null && frontendWS.readyState === WebSocket.OPEN) {
       frontendWS.send(JSON.stringify(dataToSend));
     }
-  } else {
-    const playerData = {
-      points: 20,
-      position: 0,
-      badges: [],
-      rank: 0,
-    };
 
-    const dataToSend = {
-      type: "game status",
-      gameStarted: gameStarted && boardName === gameBoard,
-      playerData: playerData,
-      board: boardName,
-      save: gameSave,
-    };
+    return;
+  }
 
-    if (frontendWS != null && frontendWS.readyState === WebSocket.OPEN) {
-      frontendWS.send(JSON.stringify(dataToSend));
-    }
+  playerData = {
+    points: player.points,
+    position: player.boardPosition,
+    badges: player.badges,
+  };
+
+  playerData["rank"] = await getRank(userId, boardName, save.name);
+
+  const dataToSend = {
+    type: "game status",
+    gameStarted:
+      gameStarted && boardName === gameBoard && save.name === gameSave,
+    playerData: playerData,
+    board: boardName,
+    save: save.name,
+  };
+
+  if (frontendWS != null && frontendWS.readyState === WebSocket.OPEN) {
+    frontendWS.send(JSON.stringify(dataToSend));
   }
 }
 
 async function resendGameStatusIfStarted(frontendWSs) {
   if (gameStarted) {
     for (id of frontendWSs.keys()) {
-      sendGameStatusToFrontend(frontendWSs.get(id), id, gameBoard, gameSave);
+      sendGameStatusToFrontend(frontendWSs.get(id), id, gameBoard);
     }
   }
 }
@@ -106,7 +94,7 @@ async function setGameReady(frontendWSs) {
   gameStarted = true;
 
   for (id of frontendWSs.keys()) {
-    sendGameStatusToFrontend(frontendWSs.get(id), id, gameBoard, gameSave);
+    sendGameStatusToFrontend(frontendWSs.get(id), id, gameBoard);
   }
 }
 
@@ -126,6 +114,7 @@ async function sendEndGameToFrontend(frontendWSs) {
 async function endGame() {
   gameBoard = "";
   gameSave = "";
+  sessionCode = null;
   gameStarted = false;
 
   console.log("Game ended");
@@ -138,20 +127,6 @@ async function addPlayerToGame(unityWS, dataReceived) {
     saveId: save._id,
     userId: dataReceived["userId"],
   });
-
-  if (!player) {
-    player = await Player.create({
-      userId: dataReceived["userId"],
-      saveId: save._id,
-      points: 20,
-      boardPosition: 0,
-      turns: 0,
-      totalAnswers: 0,
-      correctAnswers: 0,
-      badges: [],
-      finishedBoard: false,
-    });
-  }
 
   let multiplier = 1;
   for (let i = 0; i < player.badges.length; i++) {
@@ -229,6 +204,7 @@ async function sendInfoShownToFrontend(frontendWS, dataReceived) {
 async function loadGame(unityWS, dataReceived) {
   gameBoard = dataReceived["board"];
   gameSave = dataReceived["file"];
+  sessionCode = dataReceived["sessionCode"];
 
   const board = await Board.findOne({ name: gameBoard });
   let save = await Save.findOne({ boardId: board._id, name: gameSave });
@@ -887,6 +863,86 @@ async function deleteBadge(req, res) {
   return res.status(200).send();
 }
 
+async function getPlayer(req, res) {
+  const boardName = req.params.board;
+  const userId = req.params.user_id;
+
+  const board = await Board.findOne({ name: boardName });
+
+  if (!board) {
+    return res
+      .status(404)
+      .send({ error: true, message: "Tabuleiro não encontrado" });
+  }
+
+  const saves = await Save.find({ boardId: board._id });
+
+  for (let i = 0; i < saves.length; i++) {
+    const player = await Player.findOne({
+      userId: userId,
+      saveId: saves[i]._id,
+    });
+
+    if (player) {
+      return res.status(200).json(player);
+    }
+  }
+
+  return res
+    .status(404)
+    .send({ error: true, message: "Sem dados guardados para o utilizador" });
+}
+
+async function createPlayer(req, res) {
+  if (gameBoard === "" || gameSave === "" || sessionCode === null) {
+    return res.status(404).send({
+      error: true,
+      message: "Nenhuma sessão se encontra ativa neste momento",
+    });
+  }
+
+  const { userId, boardName, code } = req.body;
+
+  if (boardName !== gameBoard) {
+    return res.status(404).send({
+      error: true,
+      message: "Nenhuma sessão encontrada para o tabuleiro",
+    });
+  }
+
+  if (code !== sessionCode) {
+    return res.status(404).send({
+      error: true,
+      message: "Nenhuma sessão encontrada com o código dado",
+    });
+  }
+
+  const board = await Board.findOne({ name: boardName });
+  const save = await Save.findOne({ boardId: board._id, name: gameSave });
+  const player = await Player.findOne({ userId: userId, saveId: save._id });
+
+  if (player) {
+    return res.status(403).send({
+      error: true,
+      message: "O utilizador já se encontra registado no tabuleiro",
+    });
+  }
+
+  await Player.create({
+    userId: userId,
+    saveId: save._id,
+    points: 20,
+    boardPosition: 0,
+    turns: 0,
+    totalAnswers: 0,
+    correctAnswers: 0,
+    badges: [],
+    finishedBoard: false,
+  });
+
+  return res.status(201).send();
+}
+
 module.exports = {
   sendQuestionToFrontend,
   addPlayerToGame,
@@ -931,4 +987,6 @@ module.exports = {
   newBadge,
   updateBadge,
   deleteBadge,
+  getPlayer,
+  createPlayer,
 };

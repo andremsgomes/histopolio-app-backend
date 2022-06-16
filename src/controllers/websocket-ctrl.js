@@ -42,8 +42,7 @@ async function processMessage(ws, data) {
       await gameController.sendGameStatusToFrontend(
         ws,
         dataReceived["userId"],
-        dataReceived["board"],
-        dataReceived["saveFile"]
+        dataReceived["board"]
       );
       break;
     case "join game":
