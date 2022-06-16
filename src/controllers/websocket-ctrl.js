@@ -139,12 +139,12 @@ async function checkWebSocktetsState() {
         unityWS.send("ping");
       }
     } else {
-      if (unityDeadCount < 10) {
+      if (unityDeadCount < 30) {
         unityDeadCount++;
         loadController.deletePendingMessages();
         gameController.sendEndGameToFrontend(frontendWSs);
 
-        if (unityDeadCount === 10) {
+        if (unityDeadCount === 30) {
           gameController.endGame();
         }
       }
