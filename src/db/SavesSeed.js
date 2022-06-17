@@ -21,7 +21,7 @@ async function seedSaves(boardId) {
 
 async function seedPlayers(saveId) {
   // Add all players
-  const user = await User.findOne({ email: "andre@up.pt" });
+  const user = await User.findOne({ email: "johndoe@up.pt" });
 
   if (user) {
     await Player.create({

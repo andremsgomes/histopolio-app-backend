@@ -470,6 +470,13 @@ async function getBoards(_, res) {
   return res.status(200).json(boards);
 }
 
+async function getAdminBoards(req, res) {
+  const adminId = req.params.admin;
+  const boards = await Board.find({ adminId: adminId });
+
+  return res.status(200).json(boards);
+}
+
 async function getBoard(req, res) {
   const boardName = req.params.board;
 
@@ -990,6 +997,7 @@ module.exports = {
   updatePlayers,
   getSaves,
   getBoards,
+  getAdminBoards,
   getBoard,
   updateBoardData,
   getQuestions,
