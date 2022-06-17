@@ -4,11 +4,14 @@ const seedBadges = require("./BadgesSeed");
 const seedQuestions = require("./QuestionsSeed");
 const seedCards = require("./CardsSeed");
 const seedSaves = require("./SavesSeed");
+const User = require("../models/User");
 
 async function seedBoards() {
   // Create Histopolio board
+  const admin = await User.findOne({ email: "admin@up.pt" });
   let board = null;
   await Board.create({
+    adminId: admin._id,
     name: "Histopólio",
     description: "Um tabuleiro sobre Histologia.",
     image: "https://www.linkpicture.com/q/histopolio-logo.png",

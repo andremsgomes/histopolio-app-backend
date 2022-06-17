@@ -23,10 +23,10 @@ async function seedUsers() {
 
   // Create user
   const userSalt = await bcrypt.genSalt(10);
-  const userHashedPassword = await bcrypt.hash("andre123!", userSalt);
+  const userHashedPassword = await bcrypt.hash("johndoe123!", userSalt);
   await User.create({
-    name: "André",
-    email: "andre@up.pt",
+    name: "John Doe",
+    email: "johndoe@up.pt",
     password: userHashedPassword,
     avatarUrl: "https://www.linkpicture.com/q/user_21.png",
   })
