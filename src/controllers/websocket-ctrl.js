@@ -3,7 +3,7 @@ const loadController = require("./load-ctrl");
 
 let unityWS = null;
 let frontendWSs = new Map();
-let unityDeadCount = 3;
+let unityDeadCount = 30;
 
 async function processMessage(ws, data) {
   console.log(data);
