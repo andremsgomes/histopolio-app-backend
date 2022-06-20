@@ -488,6 +488,12 @@ async function getBoard(req, res) {
       .json({ error: true, message: "Tabuleiro não encontrado" });
   }
 
+  const data = {
+    name: board.name,
+    description: board.description,
+    image: board.image,
+  };
+
   const tiles = await Tile.find({ boardId: board._id }).sort("boardPosition");
   const tilesArray = JSON.parse(JSON.stringify(tiles));
 
@@ -518,15 +524,66 @@ async function getBoard(req, res) {
     }
   }
 
-  return res.status(200).json(tilesArray);
+  data["tiles"] = tilesArray;
+
+  return res.status(200).json(data);
 }
 
-async function updateBoardData(req, res) {
-  const { board } = req.body;
+async function updateBoard(req, res) {
+  const { boardName, name, description, image } = req.body;
 
-  for (let i = 0; i < board.length; i++) {
+  if (!boardName) {
+    return res
+      .status(400)
+      .send({ error: true, message: "Dados mal formatados" });
+  }
+
+  const board = await Board.findOne({name: boardName});
+
+  if (!board) {
+    return res
+      .status(404)
+      .json({ error: true, message: "Tabuleiro não encontrado" });
+  }
+
+  if (name && name !== board.name) {
+    const newBoard = await Board.findOne({ name: name });
+
+    if (newBoard) {
+      return res.status(400).json({
+        error: true,
+        message: "Já existe um tabuleiro com o nome dado",
+      });
+    }
+
+    board.name = name;
+  }
+
+  if (description) {
+    board.description = description;
+  }
+
+  if (image) {
+    board.image = image;
+  }
+
+  await board.save();
+
+  return res.status(200).send();
+}
+
+async function updateTiles(req, res) {
+  const { tiles } = req.body;
+
+  if (!tiles) {
+    return res
+      .status(400)
+      .send({ error: true, message: "Dados mal formatados" });
+  }
+
+  for (let i = 0; i < tiles.length; i++) {
     try {
-      await Tile.findByIdAndUpdate(board[i]._id, board[i], { upsert: true });
+      await Tile.findByIdAndUpdate(tiles[i]._id, tiles[i], { upsert: true });
     } catch (error) {
       return res.status(400).json({ error: true, message: error });
     }
@@ -999,7 +1056,8 @@ module.exports = {
   getBoards,
   getAdminBoards,
   getBoard,
-  updateBoardData,
+  updateBoard,
+  updateTiles,
   getQuestions,
   getQuestion,
   newQuestion,
