@@ -164,7 +164,7 @@ async function addPlayerToGame(unityWS, dataReceived) {
 
   if (unityWS != null && unityWS.readyState === WebSocket.OPEN) {
     unityWS.send(JSON.stringify(dataToSend));
-  } else {
+  } else if (sessionCode !== null) {
     unityMessages.push(JSON.stringify(dataToSend));
   }
 }
@@ -177,7 +177,7 @@ async function removePlayerFromGame(unityWS, userId) {
 
   if (unityWS != null && unityWS.readyState === WebSocket.OPEN) {
     unityWS.send(JSON.stringify(dataToSend));
-  } else {
+  } else if (sessionCode !== null) {
     unityMessages.push(JSON.stringify(dataToSend));
   }
 }
@@ -208,7 +208,7 @@ async function sendDiceResultToUnity(unityWS, dataReceived) {
 
   if (unityWS != null && unityWS.readyState === WebSocket.OPEN) {
     unityWS.send(JSON.stringify(dataReceived));
-  } else {
+  } else if (sessionCode !== null) {
     unityMessages.push(JSON.stringify(dataReceived));
   }
 }
@@ -252,7 +252,11 @@ async function loadGame(unityWS, dataReceived) {
     players: playersArray,
   };
 
-  unityWS.send(JSON.stringify(dataToSend));
+  if (unityWS != null && unityWS.readyState === WebSocket.OPEN) {
+    unityWS.send(JSON.stringify(dataToSend));
+  } else if (sessionCode !== null) {
+    unityMessages.push(JSON.stringify(dataToSend));
+  }
 }
 
 async function saveGame(frontendWSs, dataReceived) {
@@ -308,7 +312,7 @@ async function sendFinishTurnToFrontend(frontendWS, dataReceived) {
 async function sendDataToUnity(unityWS, dataReceived) {
   if (unityWS != null && unityWS.readyState === WebSocket.OPEN) {
     unityWS.send(JSON.stringify(dataReceived));
-  } else {
+  } else if (sessionCode !== null) {
     unityMessages.push(JSON.stringify(dataReceived));
   }
 }
@@ -352,7 +356,7 @@ async function updatePlayerBadges(unityWS, frontendWSs, dataReceived) {
 
   if (unityWS != null && unityWS.readyState === WebSocket.OPEN) {
     unityWS.send(JSON.stringify(dataToSend));
-  } else {
+  } else if (sessionCode !== null) {
     unityMessages.push(JSON.stringify(dataToSend));
   }
 
