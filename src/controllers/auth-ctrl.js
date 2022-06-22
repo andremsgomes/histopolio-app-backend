@@ -52,7 +52,7 @@ async function login(req, res) {
       .send({ error: true, message: "Dados mal formatados" });
   }
 
-  const user = await User.findOne({email: email});
+  const user = await User.findOne({ email: email });
 
   if (!user) {
     return res
@@ -60,7 +60,7 @@ async function login(req, res) {
       .json({ error: true, message: "Utilizador não encontrado" });
   }
 
-  if (!await bcrypt.compare(password, user.password)) {
+  if (!(await bcrypt.compare(password, user.password))) {
     return res.status(403).json({ error: true, message: "Password errada" });
   }
 

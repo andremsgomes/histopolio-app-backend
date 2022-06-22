@@ -17,6 +17,9 @@ async function processMessage(ws, data) {
   const command = dataReceived["type"];
 
   switch (command) {
+    case "login":
+      await loadController.login(ws, dataReceived);
+      break;
     case "question":
       await gameController.sendQuestionToFrontend(
         frontendWSs.get(dataReceived["userId"]),

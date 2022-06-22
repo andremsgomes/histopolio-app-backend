@@ -5,6 +5,9 @@ const Card = require("../models/Card");
 const Question = require("../models/Question");
 const Save = require("../models/Save");
 const Tile = require("../models/Tile");
+const User = require("../models/User");
+
+const bcrypt = require("bcrypt");
 
 let unityMessages = [];
 
@@ -113,6 +116,36 @@ function deletePendingMessages() {
   unityMessages = [];
 }
 
+async function login(ws, dataReceived) {
+  if (!(dataReceived["email"] && dataReceived["password"])) return;
+
+  const user = await User.findOne({ email: dataReceived["email"] });
+
+  if (!user) return;
+
+  if (!(await bcrypt.compare(dataReceived["password"], user.password))) return;
+
+  if (!user.adminToken) return;
+
+  const boards = await Board.find({ adminId: user._id });
+  const boardNames = [];
+
+  boards.forEach((board) => {
+    boardNames.push(board.name);
+  });
+
+  const dataToSend = {
+    type: "boards",
+    boards: boardNames,
+  };
+
+  if (ws != null && ws.readyState === WebSocket.OPEN) {
+    ws.send(JSON.stringify(dataToSend));
+  } else {
+    unityMessages.push(JSON.stringify(dataToSend));
+  }
+}
+
 module.exports = {
   loadBoard,
   loadQuestions,
@@ -121,4 +154,5 @@ module.exports = {
   loadBadges,
   sendPendingMessages,
   deletePendingMessages,
+  login,
 };
