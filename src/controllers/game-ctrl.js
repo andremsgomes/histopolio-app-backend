@@ -533,6 +533,998 @@ async function getBoard(req, res) {
   return res.status(200).json(data);
 }
 
+async function newBoard(req, res) {
+  const { userId, name, description, image } = req.body;
+
+  if (!(userId && name && description && image)) {
+    return res
+      .status(400)
+      .send({ error: true, message: "Dados mal formatados" });
+  }
+
+  const board = await Board.create({
+    adminId: userId,
+    name: name,
+    description: description,
+    image: image,
+  }).catch(() => {
+    return res.status(400).json({
+      error: true,
+      message: "Tabuleiro com o mesmo nome já existente",
+    });
+  });
+
+  await addTiles(board._id);
+
+  return res.status(201).send();
+}
+
+async function addTiles(boardId) {
+  // Add all tiles
+  await Tile.create({
+    boardId: boardId,
+    boardPosition: 0,
+    name: "Partida",
+    type: "go",
+    position: {
+      x: 9.300000190734863,
+      y: 0,
+      z: 0,
+    },
+    rotation: {
+      x: 0,
+      y: 0,
+      z: 0.7071068286895752,
+      w: 0.7071068286895752,
+    },
+    points: 20,
+  }).catch((error) => {
+    console.log(error);
+  });
+
+  await Tile.create({
+    boardId: boardId,
+    boardPosition: 1,
+    name: "Casa sem nome",
+    type: "groupProperty",
+    position: {
+      x: 8,
+      y: 0,
+      z: 0,
+    },
+    rotation: {
+      x: 0,
+      y: 0,
+      z: 0,
+      w: 1,
+    },
+    points: 6,
+    groupColor: {
+      r: 1,
+      g: 0.8500000238418579,
+      b: 0.7200000286102295,
+      a: 1,
+    },
+  }).catch((error) => {
+    console.log(error);
+  });
+
+  await Tile.create({
+    boardId: boardId,
+    boardPosition: 2,
+    name: "Decisões Do Senado",
+    type: "community",
+    position: {
+      x: 7,
+      y: 0,
+      z: 0,
+    },
+    rotation: {
+      x: 0,
+      y: 0,
+      z: 0,
+      w: 1,
+    },
+  }).catch((error) => {
+    console.log(error);
+  });
+
+  await Tile.create({
+    boardId: boardId,
+    boardPosition: 3,
+    name: "Casa sem nome",
+    type: "groupProperty",
+    position: {
+      x: 6,
+      y: 0,
+      z: 0,
+    },
+    rotation: {
+      x: 0,
+      y: 0,
+      z: 0,
+      w: 1,
+    },
+    points: 8,
+    groupColor: {
+      r: 1,
+      g: 0.8500000238418579,
+      b: 0.7200000286102295,
+      a: 1,
+    },
+  }).catch((error) => {
+    console.log(error);
+  });
+
+  await Tile.create({
+    boardId: boardId,
+    boardPosition: 4,
+    name: "Pague Seguro Escolar",
+    type: "pay",
+    position: {
+      x: 5,
+      y: 0,
+      z: 0,
+    },
+    rotation: {
+      x: 0,
+      y: 0,
+      z: 0,
+      w: 1,
+    },
+    points: -10,
+  }).catch((error) => {
+    console.log(error);
+  });
+
+  await Tile.create({
+    boardId: boardId,
+    boardPosition: 5,
+    name: "Casa sem nome",
+    type: "train",
+    position: {
+      x: 4,
+      y: 0,
+      z: 0,
+    },
+    rotation: {
+      x: 0,
+      y: 0,
+      z: 0,
+      w: 1,
+    },
+    points: 20,
+  }).catch((error) => {
+    console.log(error);
+  });
+
+  await Tile.create({
+    boardId: boardId,
+    boardPosition: 6,
+    name: "Sorte",
+    type: "chance",
+    position: {
+      x: 3,
+      y: 0,
+      z: 0,
+    },
+    rotation: {
+      x: 0,
+      y: 0,
+      z: 0,
+      w: 1,
+    },
+  }).catch((error) => {
+    console.log(error);
+  });
+
+  await Tile.create({
+    boardId: boardId,
+    boardPosition: 7,
+    name: "Casa sem nome",
+    type: "groupProperty",
+    position: {
+      x: 2,
+      y: 0,
+      z: 0,
+    },
+    rotation: {
+      x: 0,
+      y: 0,
+      z: 0,
+      w: 1,
+    },
+    points: 8,
+    groupColor: {
+      r: 1,
+      g: 0.8500000238418579,
+      b: 0.7200000286102295,
+      a: 1,
+    },
+  }).catch((error) => {
+    console.log(error);
+  });
+
+  await Tile.create({
+    boardId: boardId,
+    boardPosition: 8,
+    name: "Casa sem nome",
+    type: "groupProperty",
+    position: {
+      x: 1,
+      y: 0,
+      z: 0,
+    },
+    rotation: {
+      x: 0,
+      y: 0,
+      z: 0,
+      w: 1,
+    },
+    points: 10,
+    groupColor: {
+      r: 1,
+      g: 0.8500000238418579,
+      b: 0.7200000286102295,
+      a: 1,
+    },
+  }).catch((error) => {
+    console.log(error);
+  });
+
+  await Tile.create({
+    boardId: boardId,
+    boardPosition: 9,
+    name: "Casa sem nome",
+    type: "groupProperty",
+    position: {
+      x: 0,
+      y: 0,
+      z: 0,
+    },
+    rotation: {
+      x: 0,
+      y: 0,
+      z: 0,
+      w: 1,
+    },
+    points: 12,
+    groupColor: {
+      r: 1,
+      g: 0.8500000238418579,
+      b: 0.7200000286102295,
+      a: 1,
+    },
+  }).catch((error) => {
+    console.log(error);
+  });
+
+  await Tile.create({
+    boardId: boardId,
+    boardPosition: 10,
+    name: "Passagem Pela Biblioteca",
+    type: "prison",
+    position: {
+      x: -1.2999999523162842,
+      y: 0,
+      z: 0,
+    },
+    rotation: {
+      x: 0,
+      y: 0,
+      z: 0,
+      w: 1,
+    },
+  }).catch((error) => {
+    console.log(error);
+  });
+
+  await Tile.create({
+    boardId: boardId,
+    boardPosition: 11,
+    name: "Casa sem nome",
+    type: "groupProperty",
+    position: {
+      x: -1.2999999523162842,
+      y: 1.2999999523162842,
+      z: 0,
+    },
+    rotation: {
+      x: 0,
+      y: 0,
+      z: -0.7071068286895752,
+      w: 0.7071068286895752,
+    },
+    points: 14,
+    groupColor: {
+      r: 0.4699999988079071,
+      g: 0.6299999952316284,
+      b: 0.8399999737739563,
+      a: 1,
+    },
+  }).catch((error) => {
+    console.log(error);
+  });
+
+  await Tile.create({
+    boardId: boardId,
+    boardPosition: 12,
+    name: "Pague Prestação Propinas",
+    type: "pay",
+    position: {
+      x: -1.2999999523162842,
+      y: 2.299999952316284,
+      z: 0,
+    },
+    rotation: {
+      x: 0,
+      y: 0,
+      z: -0.7071068286895752,
+      w: 0.7071068286895752,
+    },
+    points: -10,
+  }).catch((error) => {
+    console.log(error);
+  });
+
+  await Tile.create({
+    boardId: boardId,
+    boardPosition: 13,
+    name: "Casa sem nome",
+    type: "groupProperty",
+    position: {
+      x: -1.2999999523162842,
+      y: 3.299999952316284,
+      z: 0,
+    },
+    rotation: {
+      x: 0,
+      y: 0,
+      z: -0.7071068286895752,
+      w: 0.7071068286895752,
+    },
+    points: 14,
+    groupColor: {
+      r: 0.4699999988079071,
+      g: 0.6299999952316284,
+      b: 0.8399999737739563,
+      a: 1,
+    },
+  }).catch((error) => {
+    console.log(error);
+  });
+
+  await Tile.create({
+    boardId: boardId,
+    boardPosition: 14,
+    name: "Casa sem nome",
+    type: "groupProperty",
+    position: {
+      x: -1.2999999523162842,
+      y: 4.300000190734863,
+      z: 0,
+    },
+    rotation: {
+      x: 0,
+      y: 0,
+      z: -0.7071068286895752,
+      w: 0.7071068286895752,
+    },
+    points: 15,
+    groupColor: {
+      r: 0.4699999988079071,
+      g: 0.6299999952316284,
+      b: 0.8399999737739563,
+      a: 1,
+    },
+  }).catch((error) => {
+    console.log(error);
+  });
+
+  await Tile.create({
+    boardId: boardId,
+    boardPosition: 15,
+    name: "Casa sem nome",
+    type: "train",
+    position: {
+      x: -1.2999999523162842,
+      y: 5.300000190734863,
+      z: 0,
+    },
+    rotation: {
+      x: 0,
+      y: 0,
+      z: -0.7071068286895752,
+      w: 0.7071068286895752,
+    },
+    points: 20,
+  }).catch((error) => {
+    console.log(error);
+  });
+
+  await Tile.create({
+    boardId: boardId,
+    boardPosition: 16,
+    name: "Casa sem nome",
+    type: "groupProperty",
+    position: {
+      x: -1.2999999523162842,
+      y: 6.300000190734863,
+      z: 0,
+    },
+    rotation: {
+      x: 0,
+      y: 0,
+      z: -0.7071068286895752,
+      w: 0.7071068286895752,
+    },
+    points: 20,
+    groupColor: {
+      r: 0.4699999988079071,
+      g: 0.6299999952316284,
+      b: 0.8399999737739563,
+      a: 1,
+    },
+  }).catch((error) => {
+    console.log(error);
+  });
+
+  await Tile.create({
+    boardId: boardId,
+    boardPosition: 17,
+    name: "Decisões Do Senado",
+    type: "community",
+    position: {
+      x: -1.2999999523162842,
+      y: 7.300000190734863,
+      z: 0,
+    },
+    rotation: {
+      x: 0,
+      y: 0,
+      z: -0.7071068286895752,
+      w: 0.7071068286895752,
+    },
+  }).catch((error) => {
+    console.log(error);
+  });
+
+  await Tile.create({
+    boardId: boardId,
+    boardPosition: 18,
+    name: "Casa sem nome",
+    type: "groupProperty",
+    position: {
+      x: -1.2999999523162842,
+      y: 8.300000190734863,
+      z: 0,
+    },
+    rotation: {
+      x: 0,
+      y: 0,
+      z: -0.7071068286895752,
+      w: 0.7071068286895752,
+    },
+    points: 20,
+    groupColor: {
+      r: 0.4699999988079071,
+      g: 0.6299999952316284,
+      b: 0.8399999737739563,
+      a: 1,
+    },
+  }).catch((error) => {
+    console.log(error);
+  });
+
+  await Tile.create({
+    boardId: boardId,
+    boardPosition: 19,
+    name: "Casa sem nome",
+    type: "groupProperty",
+    position: {
+      x: -1.2999999523162842,
+      y: 9.300000190734863,
+      z: 0,
+    },
+    rotation: {
+      x: 0,
+      y: 0,
+      z: -0.7071068286895752,
+      w: 0.7071068286895752,
+    },
+    points: 14,
+    groupColor: {
+      r: 0.4699999988079071,
+      g: 0.6299999952316284,
+      b: 0.8399999737739563,
+      a: 1,
+    },
+  }).catch((error) => {
+    console.log(error);
+  });
+
+  await Tile.create({
+    boardId: boardId,
+    boardPosition: 20,
+    name: "Associação De Estudantes",
+    type: "parking",
+    position: {
+      x: -1.2999999523162842,
+      y: 10.600000381469727,
+      z: 0,
+    },
+    rotation: {
+      x: 0,
+      y: 0,
+      z: -0.7071068286895752,
+      w: 0.7071068286895752,
+    },
+  }).catch((error) => {
+    console.log(error);
+  });
+
+  await Tile.create({
+    boardId: boardId,
+    boardPosition: 21,
+    name: "Casa sem nome",
+    type: "groupProperty",
+    position: {
+      x: 0,
+      y: 10.600000381469727,
+      z: 0,
+    },
+    rotation: {
+      x: 0,
+      y: 0,
+      z: 1,
+      w: -4.371138828673793e-8,
+    },
+    points: 20,
+    groupColor: {
+      r: 0.4699999988079071,
+      g: 0.6299999952316284,
+      b: 0.8399999737739563,
+      a: 1,
+    },
+  }).catch((error) => {
+    console.log(error);
+  });
+
+  await Tile.create({
+    boardId: boardId,
+    boardPosition: 22,
+    name: "Sorte",
+    type: "chance",
+    position: {
+      x: 1,
+      y: 10.600000381469727,
+      z: 0,
+    },
+    rotation: {
+      x: 0,
+      y: 0,
+      z: 1,
+      w: -4.371138828673793e-8,
+    },
+  }).catch((error) => {
+    console.log(error);
+  });
+
+  await Tile.create({
+    boardId: boardId,
+    boardPosition: 23,
+    name: "Casa sem nome",
+    type: "groupProperty",
+    position: {
+      x: 2,
+      y: 10.600000381469727,
+      z: 0,
+    },
+    rotation: {
+      x: 0,
+      y: 0,
+      z: 1,
+      w: -4.371138828673793e-8,
+    },
+    points: 20,
+    groupColor: {
+      r: 0.4699999988079071,
+      g: 0.6299999952316284,
+      b: 0.8399999737739563,
+      a: 1,
+    },
+  }).catch((error) => {
+    console.log(error);
+  });
+
+  await Tile.create({
+    boardId: boardId,
+    boardPosition: 24,
+    name: "Casa sem nome",
+    type: "groupProperty",
+    position: {
+      x: 3,
+      y: 10.600000381469727,
+      z: 0,
+    },
+    rotation: {
+      x: 0,
+      y: 0,
+      z: 1,
+      w: -4.371138828673793e-8,
+    },
+    points: 20,
+    groupColor: {
+      r: 1,
+      g: 0,
+      b: 0,
+      a: 1,
+    },
+  }).catch((error) => {
+    console.log(error);
+  });
+
+  await Tile.create({
+    boardId: boardId,
+    boardPosition: 25,
+    name: "Casa sem nome",
+    type: "train",
+    position: {
+      x: 4,
+      y: 10.600000381469727,
+      z: 0,
+    },
+    rotation: {
+      x: 0,
+      y: 0,
+      z: 1,
+      w: -4.371138828673793e-8,
+    },
+    points: 20,
+  }).catch((error) => {
+    console.log(error);
+  });
+
+  await Tile.create({
+    boardId: boardId,
+    boardPosition: 26,
+    name: "Casa sem nome",
+    type: "groupProperty",
+    position: {
+      x: 5,
+      y: 10.600000381469727,
+      z: 0,
+    },
+    rotation: {
+      x: 0,
+      y: 0,
+      z: 1,
+      w: -4.371138828673793e-8,
+    },
+    points: 20,
+    groupColor: {
+      r: 1,
+      g: 0,
+      b: 0,
+      a: 1,
+    },
+  }).catch((error) => {
+    console.log(error);
+  });
+
+  await Tile.create({
+    boardId: boardId,
+    boardPosition: 27,
+    name: "Casa sem nome",
+    type: "groupProperty",
+    position: {
+      x: 6,
+      y: 10.600000381469727,
+      z: 0,
+    },
+    rotation: {
+      x: 0,
+      y: 0,
+      z: 1,
+      w: -4.371138828673793e-8,
+    },
+    points: 20,
+    groupColor: {
+      r: 1,
+      g: 0,
+      b: 0,
+      a: 1,
+    },
+  }).catch((error) => {
+    console.log(error);
+  });
+
+  await Tile.create({
+    boardId: boardId,
+    boardPosition: 28,
+    name: "Pague Prestação Propinas",
+    type: "pay",
+    position: {
+      x: 7,
+      y: 10.600000381469727,
+      z: 0,
+    },
+    rotation: {
+      x: 0,
+      y: 0,
+      z: 1,
+      w: -4.371138828673793e-8,
+    },
+    points: -15,
+  }).catch((error) => {
+    console.log(error);
+  });
+
+  await Tile.create({
+    boardId: boardId,
+    boardPosition: 29,
+    name: "Casa sem nome",
+    type: "groupProperty",
+    position: {
+      x: 8,
+      y: 10.600000381469727,
+      z: 0,
+    },
+    rotation: {
+      x: 0,
+      y: 0,
+      z: 1,
+      w: -4.371138828673793e-8,
+    },
+    points: 20,
+    groupColor: {
+      r: 1,
+      g: 0,
+      b: 0,
+      a: 1,
+    },
+  }).catch((error) => {
+    console.log(error);
+  });
+
+  await Tile.create({
+    boardId: boardId,
+    boardPosition: 30,
+    name: "Vá Para A Biblioteca",
+    type: "goToPrison",
+    position: {
+      x: 9.300000190734863,
+      y: 10.600000381469727,
+      z: 0,
+    },
+    rotation: {
+      x: 0,
+      y: 0,
+      z: 1,
+      w: -4.371138828673793e-8,
+    },
+  }).catch((error) => {
+    console.log(error);
+  });
+
+  await Tile.create({
+    boardId: boardId,
+    boardPosition: 31,
+    name: "Casa sem nome",
+    type: "groupProperty",
+    position: {
+      x: 9.300000190734863,
+      y: 9.300000190734863,
+      z: 0,
+    },
+    rotation: {
+      x: 0,
+      y: 0,
+      z: 0.7071068286895752,
+      w: 0.7071068286895752,
+    },
+    points: 20,
+    groupColor: {
+      r: 0.3700000047683716,
+      g: 0.44999998807907104,
+      b: 0.23000000417232513,
+      a: 1,
+    },
+  }).catch((error) => {
+    console.log(error);
+  });
+
+  await Tile.create({
+    boardId: boardId,
+    boardPosition: 32,
+    name: "Casa sem nome",
+    type: "groupProperty",
+    position: {
+      x: 9.300000190734863,
+      y: 8.300000190734863,
+      z: 0,
+    },
+    rotation: {
+      x: 0,
+      y: 0,
+      z: 0.7071068286895752,
+      w: 0.7071068286895752,
+    },
+    points: 20,
+    groupColor: {
+      r: 0.3700000047683716,
+      g: 0.44999998807907104,
+      b: 0.23000000417232513,
+      a: 1,
+    },
+  }).catch((error) => {
+    console.log(error);
+  });
+
+  await Tile.create({
+    boardId: boardId,
+    boardPosition: 33,
+    name: "Decisões Do Senado",
+    type: "community",
+    position: {
+      x: 9.300000190734863,
+      y: 7.300000190734863,
+      z: 0,
+    },
+    rotation: {
+      x: 0,
+      y: 0,
+      z: 0.7071068286895752,
+      w: 0.7071068286895752,
+    },
+  }).catch((error) => {
+    console.log(error);
+  });
+
+  await Tile.create({
+    boardId: boardId,
+    boardPosition: 34,
+    name: "Casa sem nome",
+    type: "groupProperty",
+    position: {
+      x: 9.300000190734863,
+      y: 6.300000190734863,
+      z: 0,
+    },
+    rotation: {
+      x: 0,
+      y: 0,
+      z: 0.7071068286895752,
+      w: 0.7071068286895752,
+    },
+    points: 20,
+    groupColor: {
+      r: 0.3700000047683716,
+      g: 0.44999998807907104,
+      b: 0.23000000417232513,
+      a: 1,
+    },
+  }).catch((error) => {
+    console.log(error);
+  });
+
+  await Tile.create({
+    boardId: boardId,
+    boardPosition: 35,
+    name: "Casa sem nome",
+    type: "train",
+    position: {
+      x: 9.300000190734863,
+      y: 5.300000190734863,
+      z: 0,
+    },
+    rotation: {
+      x: 0,
+      y: 0,
+      z: 0.7071068286895752,
+      w: 0.7071068286895752,
+    },
+    points: 20,
+  }).catch((error) => {
+    console.log(error);
+  });
+
+  await Tile.create({
+    boardId: boardId,
+    boardPosition: 36,
+    name: "Sorte",
+    type: "chance",
+    position: {
+      x: 9.300000190734863,
+      y: 4.300000190734863,
+      z: 0,
+    },
+    rotation: {
+      x: 0,
+      y: 0,
+      z: 0.7071068286895752,
+      w: 0.7071068286895752,
+    },
+  }).catch((error) => {
+    console.log(error);
+  });
+
+  await Tile.create({
+    boardId: boardId,
+    boardPosition: 37,
+    name: "Casa sem nome",
+    type: "groupProperty",
+    position: {
+      x: 9.300000190734863,
+      y: 3.3000001907348633,
+      z: 0,
+    },
+    rotation: {
+      x: 0,
+      y: 0,
+      z: 0.7071068286895752,
+      w: 0.7071068286895752,
+    },
+    points: 14,
+    groupColor: {
+      r: 0.3700000047683716,
+      g: 0.44999998807907104,
+      b: 0.23000000417232513,
+      a: 1,
+    },
+  }).catch((error) => {
+    console.log(error);
+  });
+
+  await Tile.create({
+    boardId: boardId,
+    boardPosition: 38,
+    name: "Pague Prestação Propinas",
+    type: "pay",
+    position: {
+      x: 9.300000190734863,
+      y: 2.3000001907348633,
+      z: 0,
+    },
+    rotation: {
+      x: 0,
+      y: 0,
+      z: 0.7071068286895752,
+      w: 0.7071068286895752,
+    },
+    points: -10,
+  }).catch((error) => {
+    console.log(error);
+  });
+
+  await Tile.create({
+    boardId: boardId,
+    boardPosition: 39,
+    name: "Casa sem nome",
+    type: "groupProperty",
+    position: {
+      x: 9.300000190734863,
+      y: 1.3000001907348633,
+      z: 0,
+    },
+    rotation: {
+      x: 0,
+      y: 0,
+      z: 0.7071068286895752,
+      w: 0.7071068286895752,
+    },
+    points: 14,
+    groupColor: {
+      r: 0.3700000047683716,
+      g: 0.44999998807907104,
+      b: 0.23000000417232513,
+      a: 1,
+    },
+  }).catch((error) => {
+    console.log(error);
+  });
+}
+
 async function updateBoard(req, res) {
   const { boardName, name, description, image } = req.body;
 
@@ -542,7 +1534,7 @@ async function updateBoard(req, res) {
       .send({ error: true, message: "Dados mal formatados" });
   }
 
-  const board = await Board.findOne({name: boardName});
+  const board = await Board.findOne({ name: boardName });
 
   if (!board) {
     return res
@@ -1060,6 +2052,7 @@ module.exports = {
   getBoards,
   getAdminBoards,
   getBoard,
+  newBoard,
   updateBoard,
   updateTiles,
   getQuestions,

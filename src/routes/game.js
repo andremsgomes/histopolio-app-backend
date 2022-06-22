@@ -5,6 +5,7 @@ const gameController = require("../controllers/game-ctrl.js");
 router.get("/data/boards", gameController.getBoards);
 router.get("/data/admin/:admin/boards/", gameController.getAdminBoards);
 router.get("/data/board/:board", gameController.getBoard);
+router.post("/data/board/new", gameController.newBoard);
 router.put("/data/board/update", gameController.updateBoard);
 router.put("/data/board/tiles/update", gameController.updateTiles);
 
