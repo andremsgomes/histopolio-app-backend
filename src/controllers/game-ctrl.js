@@ -8,11 +8,11 @@ const Save = require("../models/Save");
 const Tile = require("../models/Tile");
 const User = require("../models/User");
 
-let gameBoard = "";
-let gameSave = "";
-let gameStarted = false;
-let sessionCode = null;
-let unityMessages = [];
+let boardGameMessages = new Map();
+let gameSaves = new Map();
+let sessionCodes = new Map();
+let gamesStarted = new Set();
+let playerSessions = new Map();
 
 async function sendQuestionToFrontend(frontendWS, dataReceived) {
   if (frontendWS != null && frontendWS.readyState === WebSocket.OPEN) {
@@ -55,13 +55,22 @@ async function sendGameStatusToFrontend(frontendWS, userId, boardName) {
 
   playerData["rank"] = await getRank(userId, boardName, save.name);
 
+  let adminId = null;
+  for (id of gameSaves.keys()) {
+    if (gameSaves.get(id).toString() === save._id.toString()) {
+      adminId = id;
+    }
+  }
+
+  const gameStarted = adminId && gamesStarted.has(adminId);
+
   const dataToSend = {
     type: "game status",
-    gameStarted:
-      gameStarted && boardName === gameBoard && save.name === gameSave,
+    gameStarted: gameStarted,
     playerData: playerData,
     board: boardName,
     save: save.name,
+    adminId: adminId,
   };
 
   if (frontendWS != null && frontendWS.readyState === WebSocket.OPEN) {
@@ -69,10 +78,13 @@ async function sendGameStatusToFrontend(frontendWS, userId, boardName) {
   }
 }
 
-async function resendGameStatusIfStarted(frontendWSs) {
-  if (gameStarted) {
+async function resendGameStatusIfStarted(adminId, frontendWSs) {
+  if (gamesStarted.has(adminId)) {
     for (id of frontendWSs.keys()) {
-      sendGameStatusToFrontend(frontendWSs.get(id), id, gameBoard);
+      const save = await Save.findById(gameSaves.get(adminId));
+      const board = await Board.findById(save.boardId);
+
+      sendGameStatusToFrontend(frontendWSs.get(id), id, board.name);
     }
   }
 }
@@ -91,20 +103,26 @@ async function getRank(userId, boardName, saveName) {
   return 0;
 }
 
-async function setGameReady(frontendWSs) {
-  gameStarted = true;
+async function setGameReady(frontendWSs, dataReceived) {
+  gamesStarted.add(dataReceived["adminId"]);
+
+  const save = await Save.findById(gameSaves.get(dataReceived["adminId"]));
+  const board = await Board.findById(save.boardId);
 
   for (id of frontendWSs.keys()) {
-    sendGameStatusToFrontend(frontendWSs.get(id), id, gameBoard);
+    sendGameStatusToFrontend(frontendWSs.get(id), id, board.name);
   }
 }
 
-async function sendEndGameToFrontend(frontendWSs) {
+async function sendEndGameToFrontend(adminId, frontendWSs) {
+  const save = await Save.findById(gameSaves.get(adminId));
+  const board = await Board.findById(save.boardId);
+
   const dataToSend = {
     type: "game status",
     gameStarted: false,
-    board: gameBoard,
-    save: gameSave,
+    board: board.name,
+    save: save.name,
   };
 
   for (ws of frontendWSs.values()) {
@@ -112,20 +130,35 @@ async function sendEndGameToFrontend(frontendWSs) {
   }
 }
 
-async function endGame() {
-  gameBoard = "";
-  gameSave = "";
-  sessionCode = null;
-  gameStarted = false;
-  unityMessages = [];
+async function endGame(adminId) {
+  gameSaves.delete(adminId);
+  gamesStarted.delete(adminId);
+  boardGameMessages.delete(adminId);
+
+  for (code of sessionCodes.keys()) {
+    if (sessionCodes.get(code).toString() === adminId.toString()) {
+      sessionCodes.delete(code);
+      break;
+    }
+  }
+
+  for (userId of playerSessions.keys()) {
+    if (playerSessions.get(userId).toString() === adminId.toString()) {
+      playerSessions.delete(userId);
+    }
+  }
 
   console.log("Game ended");
 }
 
-function sendPendingMessages(unityWS) {
-  while (unityMessages.length > 0) {
-    if (unityWS != null && unityWS.readyState === WebSocket.OPEN) {
-      unityWS.send(unityMessages.shift());
+function sendPendingMessages(adminId, ws) {
+  if (!boardGameMessages.get(adminId)) {
+    boardGameMessages.set(adminId, []);
+  }
+
+  while (boardGameMessages.get(adminId).length > 0) {
+    if (ws != null && ws.readyState === WebSocket.OPEN) {
+      ws.send(boardGameMessages.get(adminId).shift());
     } else {
       break;
     }
@@ -133,8 +166,9 @@ function sendPendingMessages(unityWS) {
 }
 
 async function addPlayerToGame(unityWS, dataReceived) {
-  const board = await Board.findOne({ name: gameBoard });
-  const save = await Save.findOne({ boardId: board._id, name: gameSave });
+  playerSessions.set(dataReceived["userId"], dataReceived["adminId"]);
+
+  const save = await Save.findById(gameSaves.get(dataReceived["adminId"]));
   let player = await Player.findOne({
     saveId: save._id,
     userId: dataReceived["userId"],
@@ -164,21 +198,25 @@ async function addPlayerToGame(unityWS, dataReceived) {
 
   if (unityWS != null && unityWS.readyState === WebSocket.OPEN) {
     unityWS.send(JSON.stringify(dataToSend));
-  } else if (sessionCode !== null) {
-    unityMessages.push(JSON.stringify(dataToSend));
+  } else if (sessionCodes.get(dataReceived["adminId"]) != null) {
+    boardGameMessages.get(dataReceived["adminId"]).push(JSON.stringify(dataToSend));
   }
 }
 
-async function removePlayerFromGame(unityWS, userId) {
+async function removePlayerFromGame(boardGameWSs, userId) {
+  const adminId = playerSessions.get(userId)
+  const ws = boardGameWSs.get(adminId);
+  playerSessions.delete(userId);
+
   const dataToSend = {
     type: "remove player",
     userId: userId,
   };
 
-  if (unityWS != null && unityWS.readyState === WebSocket.OPEN) {
-    unityWS.send(JSON.stringify(dataToSend));
-  } else if (sessionCode !== null) {
-    unityMessages.push(JSON.stringify(dataToSend));
+  if (ws != null && ws.readyState === WebSocket.OPEN) {
+    ws.send(JSON.stringify(dataToSend));
+  } else if (sessionCodes.get(adminId) != null) {
+    boardGameMessages.get(adminId).push(JSON.stringify(dataToSend));
   }
 }
 
@@ -208,8 +246,8 @@ async function sendDiceResultToUnity(unityWS, dataReceived) {
 
   if (unityWS != null && unityWS.readyState === WebSocket.OPEN) {
     unityWS.send(JSON.stringify(dataReceived));
-  } else if (sessionCode !== null) {
-    unityMessages.push(JSON.stringify(dataReceived));
+  } else if (sessionCodes.get(dataReceived["adminId"]) != null) {
+    boardGameMessages.get(dataReceived["adminId"]).push(JSON.stringify(dataReceived));
   }
 }
 
@@ -220,19 +258,22 @@ async function sendInfoShownToFrontend(frontendWS, dataReceived) {
 }
 
 async function loadGame(unityWS, dataReceived) {
-  gameBoard = dataReceived["board"];
-  gameSave = dataReceived["file"];
-  sessionCode = dataReceived["sessionCode"];
+  sessionCodes.set(dataReceived["sessionCode"], dataReceived["adminId"]);
 
-  const board = await Board.findOne({ name: gameBoard });
-  let save = await Save.findOne({ boardId: board._id, name: gameSave });
+  const board = await Board.findOne({ name: dataReceived["board"] });
+  let save = await Save.findOne({
+    boardId: board._id,
+    name: dataReceived["file"],
+  });
 
   if (!save) {
     save = await Save.create({
       boardId: board._id,
-      name: gameSave,
+      name: dataReceived["file"],
     });
   }
+
+  gameSaves.set(dataReceived["adminId"], save._id);
 
   const players = await Player.find({ saveId: save._id });
   const playersArray = JSON.parse(JSON.stringify(players));
@@ -254,14 +295,13 @@ async function loadGame(unityWS, dataReceived) {
 
   if (unityWS != null && unityWS.readyState === WebSocket.OPEN) {
     unityWS.send(JSON.stringify(dataToSend));
-  } else if (sessionCode !== null) {
-    unityMessages.push(JSON.stringify(dataToSend));
+  } else if (sessionCodes.get(dataReceived["adminId"]) != null) {
+    boardGameMessages.get(dataReceived["adminId"]).push(JSON.stringify(dataToSend));
   }
 }
 
 async function saveGame(frontendWSs, dataReceived) {
-  const board = await Board.findOne({ name: gameBoard });
-  const save = await Save.findOne({ boardId: board._id, name: gameSave });
+  const save = await Save.findById(gameSaves.get(dataReceived["adminId"]));
   const player = await Player.findOne({
     userId: dataReceived["userId"],
     saveId: save._id,
@@ -312,8 +352,8 @@ async function sendFinishTurnToFrontend(frontendWS, dataReceived) {
 async function sendDataToUnity(unityWS, dataReceived) {
   if (unityWS != null && unityWS.readyState === WebSocket.OPEN) {
     unityWS.send(JSON.stringify(dataReceived));
-  } else if (sessionCode !== null) {
-    unityMessages.push(JSON.stringify(dataReceived));
+  } else if (sessionCodes.get(dataReceived["adminId"]) != null) {
+    boardGameMessages.get(dataReceived["adminId"]).push(JSON.stringify(dataReceived));
   }
 }
 
@@ -323,7 +363,7 @@ async function sendContentToFrontend(frontendWS, dataReceived) {
   }
 }
 
-async function updatePlayerBadges(unityWS, frontendWSs, dataReceived) {
+async function updatePlayerBadges(boardGameWSs, frontendWSs, dataReceived) {
   const badge = await Badge.findById(dataReceived.badgeId);
   const board = await Board.findOne({ name: dataReceived.board });
   const save = await Save.findOne({
@@ -354,10 +394,17 @@ async function updatePlayerBadges(unityWS, frontendWSs, dataReceived) {
     multiplier: multiplier,
   };
 
-  if (unityWS != null && unityWS.readyState === WebSocket.OPEN) {
-    unityWS.send(JSON.stringify(dataToSend));
-  } else if (sessionCode !== null) {
-    unityMessages.push(JSON.stringify(dataToSend));
+  const adminId = playerSessions.get(dataReceived.userId);
+  
+  let ws = null;
+  if (adminId) {
+    ws = boardGameWSs.get(adminId);
+  }
+
+  if (ws != null && ws.readyState === WebSocket.OPEN) {
+    ws.send(JSON.stringify(dataToSend));
+  } else if (sessionCodes.get(adminId) != null) {
+    boardGameMessages.get(adminId).push(JSON.stringify(dataToSend));
   }
 
   sendUpdateToFrontend(frontendWSs, save._id);
@@ -1976,31 +2023,27 @@ async function getPlayer(req, res) {
 }
 
 async function createPlayer(req, res) {
-  if (gameBoard === "" || gameSave === "" || sessionCode === null) {
-    return res.status(404).send({
-      error: true,
-      message: "Nenhuma sessão se encontra ativa neste momento",
-    });
-  }
-
   const { userId, boardName, code } = req.body;
 
-  if (boardName !== gameBoard) {
-    return res.status(404).send({
-      error: true,
-      message: "Nenhuma sessão encontrada para o tabuleiro",
-    });
-  }
+  const adminId = sessionCodes.get(code);
 
-  if (code !== sessionCode) {
+  if (!adminId) {
     return res.status(404).send({
       error: true,
       message: "Nenhuma sessão encontrada com o código dado",
     });
   }
 
-  const board = await Board.findOne({ name: boardName });
-  const save = await Save.findOne({ boardId: board._id, name: gameSave });
+  const save = await Save.findById(gameSaves.get(adminId));
+  const board = await Board.findById(save.boardId);
+
+  if (boardName !== board.name) {
+    return res.status(404).send({
+      error: true,
+      message: "Nenhuma sessão encontrada para o tabuleiro",
+    });
+  }
+
   const player = await Player.findOne({ userId: userId, saveId: save._id });
 
   if (player) {

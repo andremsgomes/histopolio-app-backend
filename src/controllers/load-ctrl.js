@@ -9,7 +9,7 @@ const User = require("../models/User");
 
 const bcrypt = require("bcrypt");
 
-let unityMessages = [];
+let boardGameMessages = new Map();
 
 async function loadBoard(ws, dataReceived) {
   const board = await Board.findOne({ name: dataReceived.board });
@@ -23,13 +23,22 @@ async function loadBoard(ws, dataReceived) {
   if (ws != null && ws.readyState === WebSocket.OPEN) {
     ws.send(JSON.stringify(dataToSend));
   } else {
-    unityMessages.push(JSON.stringify(dataToSend));
+    boardGameMessages.get(dataReceived["adminId"]).push(JSON.stringify(dataToSend));
   }
 }
 
 async function loadQuestions(ws, dataReceived) {
   const board = await Board.findOne({ name: dataReceived.board });
-  const questions = await Question.find({ boardId: board._id });
+  const tiles = await Tile.find({ boardId: board._id });
+  const questions = [];
+
+  for (let i = 0; i < tiles.length; i++) {
+    const tileQuestions = await Question.find({ tileId: tiles[i]._id });
+    
+    tileQuestions.forEach((question) => {
+      questions.push(question);
+    });
+  }
 
   const dataToSend = {
     type: "questions",
@@ -39,7 +48,7 @@ async function loadQuestions(ws, dataReceived) {
   if (ws != null && ws.readyState === WebSocket.OPEN) {
     ws.send(JSON.stringify(dataToSend));
   } else {
-    unityMessages.push(JSON.stringify(dataToSend));
+    boardGameMessages.get(dataReceived["adminId"]).push(JSON.stringify(dataToSend));
   }
 }
 
@@ -66,7 +75,7 @@ async function loadCards(ws, dataReceived) {
   if (ws != null && ws.readyState === WebSocket.OPEN) {
     ws.send(JSON.stringify(dataToSend));
   } else {
-    unityMessages.push(JSON.stringify(dataToSend));
+    boardGameMessages.get(dataReceived["adminId"]).push(JSON.stringify(dataToSend));
   }
 }
 
@@ -82,7 +91,7 @@ async function loadSaves(ws, dataReceived) {
   if (ws != null && ws.readyState === WebSocket.OPEN) {
     ws.send(JSON.stringify(dataToSend));
   } else {
-    unityMessages.push(JSON.stringify(dataToSend));
+    boardGameMessages.get(dataReceived["adminId"]).push(JSON.stringify(dataToSend));
   }
 }
 
@@ -98,22 +107,26 @@ async function loadBadges(ws, dataReceived) {
   if (ws != null && ws.readyState === WebSocket.OPEN) {
     ws.send(JSON.stringify(dataToSend));
   } else {
-    unityMessages.push(JSON.stringify(dataToSend));
+    boardGameMessages.get(dataReceived["adminId"]).push(JSON.stringify(dataToSend));
   }
 }
 
-function sendPendingMessages(unityWS) {
-  while (unityMessages.length > 0) {
-    if (unityWS != null && unityWS.readyState === WebSocket.OPEN) {
-      unityWS.send(unityMessages.shift());
+function sendPendingMessages(adminId, ws) {
+  if (!boardGameMessages.get(adminId)) {
+    boardGameMessages.set(adminId, []);
+  }
+
+  while (boardGameMessages.get(adminId).length > 0) {
+    if (ws != null && ws.readyState === WebSocket.OPEN) {
+      ws.send(boardGameMessages.get(adminId).shift());
     } else {
       break;
     }
   }
 }
 
-function deletePendingMessages() {
-  unityMessages = [];
+function deletePendingMessages(adminId) {
+  boardGameMessages.delete(adminId);
 }
 
 async function login(ws, dataReceived) {
@@ -135,14 +148,15 @@ async function login(ws, dataReceived) {
   });
 
   const dataToSend = {
-    type: "boards",
+    type: "auth",
+    adminId: user._id,
     boards: boardNames,
   };
 
   if (ws != null && ws.readyState === WebSocket.OPEN) {
     ws.send(JSON.stringify(dataToSend));
   } else {
-    unityMessages.push(JSON.stringify(dataToSend));
+    boardGameMessages.get(user._id).push(JSON.stringify(dataToSend));
   }
 }
 

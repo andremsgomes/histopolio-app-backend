@@ -1,15 +1,15 @@
 const gameController = require("./game-ctrl");
 const loadController = require("./load-ctrl");
 
-let unityWS = null;
+let boardGameWSs = new Map();
+let boardGameDeadCounts = new Map();
 let frontendWSs = new Map();
-let unityDeadCount = 30;
 
 async function processMessage(ws, data) {
   console.log(data);
 
   if (data == "unityPong") {
-    unityWS.isAlive = true;
+    ws.isAlive = true;
     return;
   }
 
@@ -27,19 +27,19 @@ async function processMessage(ws, data) {
       );
       break;
     case "identification":
-      await authentication(ws, dataReceived);
+      await identification(ws, dataReceived);
       break;
     case "answer":
-      await gameController.sendDataToUnity(unityWS, dataReceived);
+      await gameController.sendDataToUnity(boardGameWSs.get(dataReceived["adminId"]), dataReceived);
       break;
     case "load board":
-      await loadController.loadBoard(unityWS, dataReceived);
+      await loadController.loadBoard(ws, dataReceived);
       break;
     case "load questions":
-      await loadController.loadQuestions(unityWS, dataReceived);
+      await loadController.loadQuestions(ws, dataReceived);
       break;
     case "load cards":
-      await loadController.loadCards(unityWS, dataReceived);
+      await loadController.loadCards(ws, dataReceived);
       break;
     case "game status":
       await gameController.sendGameStatusToFrontend(
@@ -49,7 +49,10 @@ async function processMessage(ws, data) {
       );
       break;
     case "join game":
-      await gameController.addPlayerToGame(unityWS, dataReceived);
+      await gameController.addPlayerToGame(
+        boardGameWSs.get(dataReceived["adminId"]),
+        dataReceived
+      );
       break;
     case "dice":
       await gameController.sendDiceToFrontend(
@@ -62,7 +65,7 @@ async function processMessage(ws, data) {
       );
       break;
     case "dice result":
-      await gameController.sendDiceResultToUnity(unityWS, dataReceived);
+      await gameController.sendDiceResultToUnity(boardGameWSs.get(dataReceived["adminId"]), dataReceived);
       break;
     case "info shown":
       await gameController.sendInfoShownToFrontend(
@@ -80,7 +83,7 @@ async function processMessage(ws, data) {
       );
       break;
     case "continue":
-      gameController.sendDataToUnity(unityWS, dataReceived);
+      gameController.sendDataToUnity(boardGameWSs.get(dataReceived["adminId"]), dataReceived);
       break;
     case "content":
       gameController.sendContentToFrontend(
@@ -89,38 +92,38 @@ async function processMessage(ws, data) {
       );
       break;
     case "content viewed":
-      gameController.sendDataToUnity(unityWS, dataReceived);
+      gameController.sendDataToUnity(boardGameWSs.get(dataReceived["adminId"]), dataReceived);
       break;
     case "next player":
-      gameController.sendDataToUnity(unityWS, dataReceived);
+      gameController.sendDataToUnity(boardGameWSs.get(dataReceived["adminId"]), dataReceived);
       break;
     case "badge purchased":
-      gameController.updatePlayerBadges(unityWS, frontendWSs, dataReceived);
+      gameController.updatePlayerBadges(boardGameWSs, frontendWSs, dataReceived);
       break;
     case "load game":
-      gameController.loadGame(unityWS, dataReceived);
+      gameController.loadGame(ws, dataReceived);
       break;
     case "load saves":
-      loadController.loadSaves(unityWS, dataReceived);
+      loadController.loadSaves(ws, dataReceived);
       break;
     case "load badges":
       loadController.loadBadges(ws, dataReceived);
       break;
     case "ready":
-      gameController.setGameReady(frontendWSs);
+      gameController.setGameReady(frontendWSs, dataReceived);
       break;
     default:
       console.log("Unknown message: " + data);
   }
 }
 
-async function authentication(ws, dataReceived) {
+async function identification(ws, dataReceived) {
   if (dataReceived["platform"] == "unity") {
-    unityWS = ws;
-    unityDeadCount = 0;
-    gameController.resendGameStatusIfStarted(frontendWSs);
-    loadController.sendPendingMessages(unityWS);
-    gameController.sendPendingMessages(unityWS);
+    boardGameWSs.set(dataReceived["adminId"], ws);
+    boardGameDeadCounts.set(dataReceived["adminId"], 0);
+    gameController.resendGameStatusIfStarted(dataReceived["adminId"], frontendWSs);
+    loadController.sendPendingMessages(dataReceived["adminId"], ws);
+    gameController.sendPendingMessages(dataReceived["adminId"], ws);
     console.log("Unity connected");
   } else {
     frontendWSs.set(dataReceived["id"], ws);
@@ -130,25 +133,30 @@ async function authentication(ws, dataReceived) {
 
 async function checkWebSocktetsState() {
   setInterval(async function () {
-    if (unityWS != null) {
-      if (!unityWS.isAlive) {
-        gameController.sendEndGameToFrontend(frontendWSs);
-        unityWS.terminate();
-        unityWS = null;
-        console.log("Unity closed");
-      } else {
-        unityWS.isAlive = false;
-        unityDeadCount = 0;
-        unityWS.send("ping");
-      }
-    } else {
-      if (unityDeadCount < 30) {
-        unityDeadCount++;
-        loadController.deletePendingMessages();
-        gameController.sendEndGameToFrontend(frontendWSs);
+    for (id of boardGameDeadCounts.keys()) {
+      const ws = boardGameWSs.get(id);
 
-        if (unityDeadCount === 30) {
-          gameController.endGame();
+      if (ws) {
+        if (!ws.isAlive) {
+          gameController.sendEndGameToFrontend(id, frontendWSs);
+          ws.terminate();
+          boardGameWSs.delete(id);
+          console.log("Board game closed");
+        } else {
+          ws.isAlive = false;
+          boardGameDeadCounts.set(id, 0);
+          ws.send("ping");
+        }
+      } else {
+        if (boardGameDeadCounts.get(id) < 5) {
+          boardGameDeadCounts.set(id, boardGameDeadCounts.get(id) + 1);
+          gameController.sendEndGameToFrontend(id, frontendWSs);
+
+          if (boardGameDeadCounts.get(id) === 5) {
+            gameController.endGame(id);
+            loadController.deletePendingMessages(id);
+            boardGameDeadCounts.delete(id);
+          }
         }
       }
     }
@@ -157,7 +165,7 @@ async function checkWebSocktetsState() {
       const ws = frontendWSs.get(id);
 
       if (!ws.isAlive) {
-        gameController.removePlayerFromGame(unityWS, id);
+        gameController.removePlayerFromGame(boardGameWSs, id);
         ws.terminate();
         frontendWSs.delete(id);
         console.log(`User ${id} disconnected!`);
