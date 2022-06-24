@@ -158,6 +158,8 @@ async function login(ws, dataReceived) {
   } else {
     boardGameMessages.get(user._id).push(JSON.stringify(dataToSend));
   }
+
+  return user._id
 }
 
 module.exports = {

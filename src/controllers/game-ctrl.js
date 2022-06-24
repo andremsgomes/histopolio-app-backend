@@ -198,13 +198,15 @@ async function addPlayerToGame(unityWS, dataReceived) {
 
   if (unityWS != null && unityWS.readyState === WebSocket.OPEN) {
     unityWS.send(JSON.stringify(dataToSend));
-  } else if (sessionCodes.get(dataReceived["adminId"]) != null) {
-    boardGameMessages.get(dataReceived["adminId"]).push(JSON.stringify(dataToSend));
+  } else if (gamesStarted.has(dataReceived["adminId"])) {
+    boardGameMessages
+      .get(dataReceived["adminId"])
+      .push(JSON.stringify(dataToSend));
   }
 }
 
 async function removePlayerFromGame(boardGameWSs, userId) {
-  const adminId = playerSessions.get(userId)
+  const adminId = playerSessions.get(userId);
   const ws = boardGameWSs.get(adminId);
   playerSessions.delete(userId);
 
@@ -215,7 +217,7 @@ async function removePlayerFromGame(boardGameWSs, userId) {
 
   if (ws != null && ws.readyState === WebSocket.OPEN) {
     ws.send(JSON.stringify(dataToSend));
-  } else if (sessionCodes.get(adminId) != null) {
+  } else if (gamesStarted.has(adminId)) {
     boardGameMessages.get(adminId).push(JSON.stringify(dataToSend));
   }
 }
@@ -246,8 +248,10 @@ async function sendDiceResultToUnity(unityWS, dataReceived) {
 
   if (unityWS != null && unityWS.readyState === WebSocket.OPEN) {
     unityWS.send(JSON.stringify(dataReceived));
-  } else if (sessionCodes.get(dataReceived["adminId"]) != null) {
-    boardGameMessages.get(dataReceived["adminId"]).push(JSON.stringify(dataReceived));
+  } else if (gamesStarted.has(dataReceived["adminId"])) {
+    boardGameMessages
+      .get(dataReceived["adminId"])
+      .push(JSON.stringify(dataReceived));
   }
 }
 
@@ -258,7 +262,13 @@ async function sendInfoShownToFrontend(frontendWS, dataReceived) {
 }
 
 async function loadGame(unityWS, dataReceived) {
-  sessionCodes.set(dataReceived["sessionCode"], dataReceived["adminId"]);
+  let sessionCode = Math.floor(Math.random() * 9000) + 1000;
+
+  while (sessionCodes.get(sessionCode)) {
+    sessionCode = Math.floor(Math.random() * 9000) + 1000;
+  }
+
+  sessionCodes.set(sessionCode, dataReceived["adminId"]);
 
   const board = await Board.findOne({ name: dataReceived["board"] });
   let save = await Save.findOne({
@@ -289,14 +299,17 @@ async function loadGame(unityWS, dataReceived) {
   }
 
   const dataToSend = {
-    type: "players",
+    type: "session",
     players: playersArray,
+    sessionCode: sessionCode,
   };
 
   if (unityWS != null && unityWS.readyState === WebSocket.OPEN) {
     unityWS.send(JSON.stringify(dataToSend));
-  } else if (sessionCodes.get(dataReceived["adminId"]) != null) {
-    boardGameMessages.get(dataReceived["adminId"]).push(JSON.stringify(dataToSend));
+  } else if (gamesStarted.has(dataReceived["adminId"])) {
+    boardGameMessages
+      .get(dataReceived["adminId"])
+      .push(JSON.stringify(dataToSend));
   }
 }
 
@@ -352,8 +365,10 @@ async function sendFinishTurnToFrontend(frontendWS, dataReceived) {
 async function sendDataToUnity(unityWS, dataReceived) {
   if (unityWS != null && unityWS.readyState === WebSocket.OPEN) {
     unityWS.send(JSON.stringify(dataReceived));
-  } else if (sessionCodes.get(dataReceived["adminId"]) != null) {
-    boardGameMessages.get(dataReceived["adminId"]).push(JSON.stringify(dataReceived));
+  } else if (gamesStarted.has(dataReceived["adminId"])) {
+    boardGameMessages
+      .get(dataReceived["adminId"])
+      .push(JSON.stringify(dataReceived));
   }
 }
 
@@ -395,7 +410,7 @@ async function updatePlayerBadges(boardGameWSs, frontendWSs, dataReceived) {
   };
 
   const adminId = playerSessions.get(dataReceived.userId);
-  
+
   let ws = null;
   if (adminId) {
     ws = boardGameWSs.get(adminId);
@@ -403,7 +418,7 @@ async function updatePlayerBadges(boardGameWSs, frontendWSs, dataReceived) {
 
   if (ws != null && ws.readyState === WebSocket.OPEN) {
     ws.send(JSON.stringify(dataToSend));
-  } else if (sessionCodes.get(adminId) != null) {
+  } else if (gamesStarted.has(adminId)) {
     boardGameMessages.get(adminId).push(JSON.stringify(dataToSend));
   }
 
@@ -645,7 +660,7 @@ async function addTiles(boardId) {
       z: 0,
       w: 1,
     },
-    points: 6,
+    points: 10,
     groupColor: {
       r: 1,
       g: 0.8500000238418579,
@@ -692,7 +707,7 @@ async function addTiles(boardId) {
       z: 0,
       w: 1,
     },
-    points: 8,
+    points: 20,
     groupColor: {
       r: 1,
       g: 0.8500000238418579,
@@ -781,7 +796,7 @@ async function addTiles(boardId) {
       z: 0,
       w: 1,
     },
-    points: 8,
+    points: 15,
     groupColor: {
       r: 1,
       g: 0.8500000238418579,
@@ -808,7 +823,7 @@ async function addTiles(boardId) {
       z: 0,
       w: 1,
     },
-    points: 10,
+    points: 20,
     groupColor: {
       r: 1,
       g: 0.8500000238418579,
@@ -835,7 +850,7 @@ async function addTiles(boardId) {
       z: 0,
       w: 1,
     },
-    points: 12,
+    points: 15,
     groupColor: {
       r: 1,
       g: 0.8500000238418579,
@@ -882,7 +897,7 @@ async function addTiles(boardId) {
       z: -0.7071068286895752,
       w: 0.7071068286895752,
     },
-    points: 14,
+    points: 20,
     groupColor: {
       r: 0.4699999988079071,
       g: 0.6299999952316284,
@@ -930,7 +945,7 @@ async function addTiles(boardId) {
       z: -0.7071068286895752,
       w: 0.7071068286895752,
     },
-    points: 14,
+    points: 15,
     groupColor: {
       r: 0.4699999988079071,
       g: 0.6299999952316284,
@@ -1079,7 +1094,7 @@ async function addTiles(boardId) {
       z: -0.7071068286895752,
       w: 0.7071068286895752,
     },
-    points: 14,
+    points: 15,
     groupColor: {
       r: 0.4699999988079071,
       g: 0.6299999952316284,
@@ -1200,7 +1215,7 @@ async function addTiles(boardId) {
       z: 1,
       w: -4.371138828673793e-8,
     },
-    points: 20,
+    points: 15,
     groupColor: {
       r: 1,
       g: 0,
@@ -1275,7 +1290,7 @@ async function addTiles(boardId) {
       z: 1,
       w: -4.371138828673793e-8,
     },
-    points: 20,
+    points: 15,
     groupColor: {
       r: 1,
       g: 0,
@@ -1512,7 +1527,7 @@ async function addTiles(boardId) {
       z: 0.7071068286895752,
       w: 0.7071068286895752,
     },
-    points: 14,
+    points: 15,
     groupColor: {
       r: 0.3700000047683716,
       g: 0.44999998807907104,
@@ -1560,7 +1575,7 @@ async function addTiles(boardId) {
       z: 0.7071068286895752,
       w: 0.7071068286895752,
     },
-    points: 14,
+    points: 15,
     groupColor: {
       r: 0.3700000047683716,
       g: 0.44999998807907104,

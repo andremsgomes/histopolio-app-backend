@@ -72,7 +72,7 @@ async function seedTiles(boardId) {
       z: 0,
       w: 1,
     },
-    points: 6,
+    points: 10,
     groupColor: {
       r: 1,
       g: 0.8500000238418579,
@@ -119,7 +119,7 @@ async function seedTiles(boardId) {
       z: 0,
       w: 1,
     },
-    points: 8,
+    points: 20,
     groupColor: {
       r: 1,
       g: 0.8500000238418579,
@@ -208,7 +208,7 @@ async function seedTiles(boardId) {
       z: 0,
       w: 1,
     },
-    points: 8,
+    points: 15,
     groupColor: {
       r: 1,
       g: 0.8500000238418579,
@@ -235,7 +235,7 @@ async function seedTiles(boardId) {
       z: 0,
       w: 1,
     },
-    points: 10,
+    points: 20,
     groupColor: {
       r: 1,
       g: 0.8500000238418579,
@@ -262,7 +262,7 @@ async function seedTiles(boardId) {
       z: 0,
       w: 1,
     },
-    points: 12,
+    points: 15,
     groupColor: {
       r: 1,
       g: 0.8500000238418579,
@@ -309,7 +309,7 @@ async function seedTiles(boardId) {
       z: -0.7071068286895752,
       w: 0.7071068286895752,
     },
-    points: 14,
+    points: 20,
     groupColor: {
       r: 0.4699999988079071,
       g: 0.6299999952316284,
@@ -357,7 +357,7 @@ async function seedTiles(boardId) {
       z: -0.7071068286895752,
       w: 0.7071068286895752,
     },
-    points: 14,
+    points: 15,
     groupColor: {
       r: 0.4699999988079071,
       g: 0.6299999952316284,
@@ -506,7 +506,7 @@ async function seedTiles(boardId) {
       z: -0.7071068286895752,
       w: 0.7071068286895752,
     },
-    points: 14,
+    points: 15,
     groupColor: {
       r: 0.4699999988079071,
       g: 0.6299999952316284,
@@ -627,7 +627,7 @@ async function seedTiles(boardId) {
       z: 1,
       w: -4.371138828673793e-8,
     },
-    points: 20,
+    points: 15,
     groupColor: {
       r: 1,
       g: 0,
@@ -702,7 +702,7 @@ async function seedTiles(boardId) {
       z: 1,
       w: -4.371138828673793e-8,
     },
-    points: 20,
+    points: 15,
     groupColor: {
       r: 1,
       g: 0,
@@ -939,7 +939,7 @@ async function seedTiles(boardId) {
       z: 0.7071068286895752,
       w: 0.7071068286895752,
     },
-    points: 14,
+    points: 15,
     groupColor: {
       r: 0.3700000047683716,
       g: 0.44999998807907104,
@@ -987,7 +987,7 @@ async function seedTiles(boardId) {
       z: 0.7071068286895752,
       w: 0.7071068286895752,
     },
-    points: 14,
+    points: 15,
     groupColor: {
       r: 0.3700000047683716,
       g: 0.44999998807907104,
