@@ -19,7 +19,9 @@ async function processMessage(ws, data) {
   switch (command) {
     case "login":
       const adminId = await loadController.login(ws, dataReceived);
-      await clearData(adminId.toString());
+      if (adminId) {
+        await clearData(adminId.toString());
+      }
       break;
     case "question":
       await gameController.sendQuestionToFrontend(

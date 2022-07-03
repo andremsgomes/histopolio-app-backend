@@ -520,7 +520,7 @@ async function seedTiles(boardId) {
   await Tile.create({
     boardId: boardId,
     boardPosition: 20,
-    name: "Associação De Estudantes",
+    name: "Associação de Estudantes",
     type: "parking",
     position: {
       x: -1.2999999523162842,
@@ -764,7 +764,7 @@ async function seedTiles(boardId) {
   await Tile.create({
     boardId: boardId,
     boardPosition: 30,
-    name: "Vá Para A Biblioteca",
+    name: "Vá para a Biblioteca",
     type: "goToPrison",
     position: {
       x: 9.300000190734863,
