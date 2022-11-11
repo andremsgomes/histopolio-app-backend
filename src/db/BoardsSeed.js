@@ -5,6 +5,7 @@ const seedQuestions = require("./QuestionsSeed");
 const seedCards = require("./CardsSeed");
 const seedSaves = require("./SavesSeed");
 const User = require("../models/User");
+const { duplicateBoard } = require("../controllers/game-ctrl");
 
 async function seedBoards() {
   // Create Histopolio board
@@ -31,6 +32,33 @@ async function seedBoards() {
     await seedCards(board._id);
     await seedSaves(board._id);
   }
+
+  const adminFmup = await User.findOne({ email: "fmup.admin@up.pt" });
+  let boardFmup = await Board.findOne({ adminId: adminFmup._id });
+  board = await Board.findOne({ name: "Histopólio" });
+
+  if (!boardFmup) {
+    const result = await duplicateBoard(adminFmup._id, board._id);
+
+    if (result.error) {
+      console.log("Error creating FMUP Histopólio board");
+      return;
+    }
+      
+    boardFmup = await Board.findOne({ adminId: adminFmup._id });
+
+    if (!boardFmup) {
+      console.log("Error creating FMUP Histopólio board");
+      return;
+    }
+
+    boardFmup.name = "Histopólio FMUP";
+    boardFmup.save();
+
+    console.log("FMUP Histopólio board created");
+  }
+  else
+    console.log("FMUP Histopólio board already exists");
 }
 
 async function seedTiles(boardId) {

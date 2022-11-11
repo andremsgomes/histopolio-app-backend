@@ -1587,6 +1587,190 @@ async function addTiles(boardId) {
   });
 }
 
+async function importBoard(req, res) {
+  const { userId, boardId } = req.body
+
+  if (!(userId && boardId)) {
+    return res
+      .status(400)
+      .send({ error: true, message: "Dados mal formatados" });
+  }
+
+  const result = await duplicateBoard(boardId);
+
+  if (result.error) {
+    return res
+      .status(result.status)
+      .send({ error: true, message: result.message });
+  }
+
+  return res.status(result.status).send({ message: result.message });
+}
+
+async function duplicateBoard(userId, boardId) {
+  const user = await User.findById(userId);
+
+  if (!user) return { error: true, status: 404, message: "Utilizador não encontrado" };
+  if (!user.adminToken) return { error: true, status: 403, message: "O utilizador não tem permissões para criar novos tabuleiros" };
+
+  // Duplicate board
+  const board = await Board.findById(boardId);
+
+  if (!board) return { error: true, status: 404, message: "Tabuleiro não encontrado" };
+
+  const newBoard = await Board.create({
+    adminId: userId,
+    name: board.name + " (copy)",
+    description: board.description,
+    image: board.image,
+  }).catch(() => {
+    return { error: true, status: 400, message: "Tabuleiro com o mesmo nome já existente" };
+  });
+
+  // Duplicate tiles
+  const tiles = await Tile.find({ boardId: board._id }).sort("boardPosition");
+
+  for (let i = 0; i < tiles.length; i++) {
+    const result = await duplicateTile(tiles[i], newBoard._id);
+
+    if (result.error) return { error: true, status: result.status, message: result.message };
+  }
+
+  // Duplicate cards
+  const cards = await Card.find({ boardId: board._id });
+
+  for (let i = 0; i < cards.length; i++) {
+    const result = await duplicateCard(cards[i], newBoard._id, "board");
+
+    if (result.error) return { error: true, status: result.status, message: result.message };
+  }
+
+  // Duplicate badges
+  const badges = await Badge.find({ boardId: board._id });
+  console.log(badges);
+
+  for (let i = 0; i < badges.length; i++) {
+    const result = await duplicateBadge(badges[i], newBoard._id);
+    console.log(result);
+
+    if (result.error) return { error: true, status: result.status, message: result.message };    
+  }
+
+  return { error: false, status: 201, message: "Tabuleiro duplicado com sucesso" };
+}
+
+async function duplicateTile(tile, boardId) {
+  const newTileBody = {
+    boardId: boardId,
+    boardPosition: tile.boardPosition,
+    name: tile.name,
+    type: tile.type,
+    position: {
+      x: tile.position.x,
+      y: tile.position.y,
+      z: tile.position.z,
+    },
+    rotation: {
+      x: tile.rotation.x,
+      y: tile.rotation.y,
+      z: tile.rotation.z,
+      w: tile.rotation.w,
+    }
+  }
+
+  if (tile.points)
+    newTileBody["points"] = tile.points;
+
+  if (tile.groupColor) {
+    newTileBody["groupColor"] = {
+      r: tile.groupColor.r,
+      g: tile.groupColor.g,
+      b: tile.groupColor.b,
+      a: tile.groupColor.a,
+    }
+  }
+
+  const newTile = await Tile.create(newTileBody).catch(() => {
+    return { error: true, status: 400, message: "Erro ao criar as casas do tabuleiro" };
+  });
+
+  // Duplicate questions
+  const questions = await Question.find({ tileId: tile._id });
+
+  for (let i = 0; i < questions.length; i++) {
+    const result = await duplicateQuestion(questions[i], newTile._id);
+
+    if (result.error) return { error: true, status: result.status, message: result.message };
+  }
+
+  // Duplicate tile cards
+  const cards = await Card.find({ tileId: tile._id });
+
+  for (let i = 0; i < cards.length; i++) {
+    const result = await duplicateCard(cards[i], newTile._id, "tile");
+
+    if (result.error) return { error: true, status: result.status, message: result.message };
+  }
+
+  return { error: false, status: 201, message: "Casa criada com sucesso" };
+}
+
+async function duplicateQuestion(question, tileId) {
+  const newQuestionBody = {
+    tileId: tileId,
+    question: question.question,
+    answers: question.answers,
+    correctAnswer: question.correctAnswer
+  }
+
+  if (question.image)
+    newQuestionBody["image"] = question.image;
+
+  await Question.create(newQuestionBody).catch(() => {
+    return { error: true, status: 400, message: "Erro ao criar as perguntas do tabuleiro" };
+  });
+
+  return { error: false, status: 201, message: "Pergunta criada com sucesso" };
+}
+
+async function duplicateCard(card, resourceId, resourceType) {
+  const newCardBody = {
+    type: card.type,
+    info: card.info
+  };
+
+  if (resourceType === "tile")
+    newCardBody["tileId"] = resourceId;
+  else
+    newCardBody["boardId"] = resourceId;
+
+  if (card.subtype) newCardBody["subtype"] = card.subtype;
+  if (card.points) newCardBody["points"] = card.points;
+  if (card.action) newCardBody["action"] = card.action;
+  if (card.actionValue) newCardBody["actionValue"] = card.actionValue;
+  if (card.content) newCardBody["content"] = card.content;
+
+  await Card.create(newCardBody).catch(() => {
+    return { error: true, status: 400, message: "Erro ao criar as cartas do tabuleiro" };
+  });
+
+  return { error: false, status: 201, message: "Carta criada com sucesso" };
+}
+
+async function duplicateBadge(badge, boardId) {
+  await Badge.create({
+    boardId: boardId,
+    name: badge.name,
+    multiplier: badge.multiplier,
+    cost: badge.cost,
+    image: badge.image
+  }).catch(() => {
+    return { error: true, status: 400, message: "Erro ao criar os troféus do tabuleiro" };
+  });
+
+  return { error: false, status: 201, message: "Troféu criado com sucesso" };
+}
+
 async function updateBoard(req, res) {
   const { boardName, name, description, image } = req.body;
 
@@ -2111,6 +2295,8 @@ module.exports = {
   getAdminBoards,
   getBoard,
   newBoard,
+  importBoard,
+  duplicateBoard,
   updateBoard,
   updateTiles,
   getQuestions,

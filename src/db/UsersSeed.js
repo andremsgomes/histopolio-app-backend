@@ -36,6 +36,24 @@ async function seedUsers() {
     .catch(() => {
       console.log("User already exists");
     });
+
+  // Create FMUP admin
+  const adminFmupSalt = await bcrypt.genSalt(10);
+  const adminFmupHashedPassword = await bcrypt.hash("fmup123!", adminFmupSalt);
+  await User.create({
+    name: "FMUP admin",
+    email: "fmup.admin@up.pt",
+    password: adminFmupHashedPassword,
+    avatarUrl: "https://www.linkpicture.com/q/user_21.png",
+    adminToken:
+      "dwR+i*}{)tAS11u>,7JT0{oB[3uH1Z:8'v`vcu.U2Uod2-.zd4Q'S|I%=@I%UDo",
+  })
+    .then(() => {
+      console.log("FMUP Admin created");
+    })
+    .catch(() => {
+      console.log("FMUP Admin already exists");
+    });
 }
 
 module.exports = seedUsers;
