@@ -36,6 +36,7 @@ router.get("/data/:board/saves", gameController.getSaves);
 
 router.get("/data/:board/saves/:save", gameController.getPlayers);
 router.put("/data/save/update", gameController.updatePlayers);
+router.delete("/data/save/:id", gameController.deleteSave);
 
 router.get("/data/:board/players/:user_id", gameController.getPlayer);
 router.post("/data/players/new", gameController.createPlayer);

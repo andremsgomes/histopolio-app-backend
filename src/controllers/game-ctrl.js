@@ -507,6 +507,23 @@ async function updatePlayers(req, res) {
   return res.status(200).send();
 }
 
+async function deleteSave(req, res) {
+  const id = req.params.id;
+
+  const save = await Save.findById(id);
+
+  if (!save) {
+    return res
+      .status(404)
+      .json({ error: true, message: "Dados guardados não encontrados" });
+  }
+  
+  await Player.deleteMany({ saveId: save._id });
+  await Save.deleteOne({ _id: save._id });
+
+  return res.status(200).send();
+}
+
 async function getSaves(req, res) {
   const boardName = req.params.board;
 
@@ -2290,6 +2307,7 @@ module.exports = {
   getPlayerSavedData,
   getPlayers,
   updatePlayers,
+  deleteSave,
   getSaves,
   getBoards,
   getAdminBoards,
