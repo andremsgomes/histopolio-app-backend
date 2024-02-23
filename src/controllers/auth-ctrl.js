@@ -3,9 +3,10 @@ const bcrypt = require("bcrypt");
 const User = require("../models/User");
 
 function signup(req, res) {
-  const { name, avatarToSend, email, password } = req.body;
+  const { name, email, password } = req.body;
+  const avatar = req.file;
 
-  if (!(name && avatarToSend && email && password)) {
+  if (!(name && avatar && email && password)) {
     return res
       .status(400)
       .send({ error: true, message: "Dados mal formatados" });
@@ -21,7 +22,7 @@ function signup(req, res) {
     name: name,
     email: email,
     password: hashedPassword,
-    avatarUrl: avatarToSend,
+    avatarUrl: avatar.location,
   };
 
   User.create(body)
