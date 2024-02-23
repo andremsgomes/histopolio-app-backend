@@ -14,26 +14,15 @@ const key = (req, file, cb) => {
   });
 };
 
-const storageTypes = {
-  dev: multerS3({
-    s3: new aws.S3(),
-    bucket: 'histopolio-dev',
-    contentType: multerS3.AUTO_CONTENT_TYPE,
-    acl: 'public-read',
-    key
-  }),
-  prod: multerS3({
+module.exports = {
+  dest: path.resolve(__dirname, "..", "..", "tmp", "uploads", "avatars"),
+  storage: multerS3({
     s3: new aws.S3(),
     bucket: 'histopolio',
     contentType: multerS3.AUTO_CONTENT_TYPE,
     acl: 'public-read',
     key
   }),
-}
-
-module.exports = {
-  dest: path.resolve(__dirname, "..", "..", "tmp", "uploads", "avatars"),
-  storage: storageTypes[process.env.ENV],
   limits: {
     fileSize: 5 * 1024 * 1024,
   },
