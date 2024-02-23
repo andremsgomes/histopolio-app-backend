@@ -517,7 +517,7 @@ async function deleteSave(req, res) {
       .status(404)
       .json({ error: true, message: "Dados guardados não encontrados" });
   }
-  
+
   await Player.deleteMany({ saveId: save._id });
   await Save.deleteOne({ _id: save._id });
 
@@ -1605,7 +1605,7 @@ async function addTiles(boardId) {
 }
 
 async function importBoard(req, res) {
-  const { userId, boardId } = req.body
+  const { userId, boardId } = req.body;
 
   if (!(userId && boardId)) {
     return res
@@ -1627,13 +1627,20 @@ async function importBoard(req, res) {
 async function duplicateBoard(userId, boardId) {
   const user = await User.findById(userId);
 
-  if (!user) return { error: true, status: 404, message: "Utilizador não encontrado" };
-  if (!user.adminToken) return { error: true, status: 403, message: "O utilizador não tem permissões para criar novos tabuleiros" };
+  if (!user)
+    return { error: true, status: 404, message: "Utilizador não encontrado" };
+  if (!user.adminToken)
+    return {
+      error: true,
+      status: 403,
+      message: "O utilizador não tem permissões para criar novos tabuleiros",
+    };
 
   // Duplicate board
   const board = await Board.findById(boardId);
 
-  if (!board) return { error: true, status: 404, message: "Tabuleiro não encontrado" };
+  if (!board)
+    return { error: true, status: 404, message: "Tabuleiro não encontrado" };
 
   const newBoard = await Board.create({
     adminId: userId,
@@ -1641,7 +1648,11 @@ async function duplicateBoard(userId, boardId) {
     description: board.description,
     image: board.image,
   }).catch(() => {
-    return { error: true, status: 400, message: "Tabuleiro com o mesmo nome já existente" };
+    return {
+      error: true,
+      status: 400,
+      message: "Tabuleiro com o mesmo nome já existente",
+    };
   });
 
   // Duplicate tiles
@@ -1650,7 +1661,8 @@ async function duplicateBoard(userId, boardId) {
   for (let i = 0; i < tiles.length; i++) {
     const result = await duplicateTile(tiles[i], newBoard._id);
 
-    if (result.error) return { error: true, status: result.status, message: result.message };
+    if (result.error)
+      return { error: true, status: result.status, message: result.message };
   }
 
   // Duplicate cards
@@ -1659,7 +1671,8 @@ async function duplicateBoard(userId, boardId) {
   for (let i = 0; i < cards.length; i++) {
     const result = await duplicateCard(cards[i], newBoard._id, "board");
 
-    if (result.error) return { error: true, status: result.status, message: result.message };
+    if (result.error)
+      return { error: true, status: result.status, message: result.message };
   }
 
   // Duplicate badges
@@ -1670,10 +1683,15 @@ async function duplicateBoard(userId, boardId) {
     const result = await duplicateBadge(badges[i], newBoard._id);
     console.log(result);
 
-    if (result.error) return { error: true, status: result.status, message: result.message };    
+    if (result.error)
+      return { error: true, status: result.status, message: result.message };
   }
 
-  return { error: false, status: 201, message: "Tabuleiro duplicado com sucesso" };
+  return {
+    error: false,
+    status: 201,
+    message: "Tabuleiro duplicado com sucesso",
+  };
 }
 
 async function duplicateTile(tile, boardId) {
@@ -1692,11 +1710,10 @@ async function duplicateTile(tile, boardId) {
       y: tile.rotation.y,
       z: tile.rotation.z,
       w: tile.rotation.w,
-    }
-  }
+    },
+  };
 
-  if (tile.points)
-    newTileBody["points"] = tile.points;
+  if (tile.points) newTileBody["points"] = tile.points;
 
   if (tile.groupColor) {
     newTileBody["groupColor"] = {
@@ -1704,11 +1721,15 @@ async function duplicateTile(tile, boardId) {
       g: tile.groupColor.g,
       b: tile.groupColor.b,
       a: tile.groupColor.a,
-    }
+    };
   }
 
   const newTile = await Tile.create(newTileBody).catch(() => {
-    return { error: true, status: 400, message: "Erro ao criar as casas do tabuleiro" };
+    return {
+      error: true,
+      status: 400,
+      message: "Erro ao criar as casas do tabuleiro",
+    };
   });
 
   // Duplicate questions
@@ -1717,7 +1738,8 @@ async function duplicateTile(tile, boardId) {
   for (let i = 0; i < questions.length; i++) {
     const result = await duplicateQuestion(questions[i], newTile._id);
 
-    if (result.error) return { error: true, status: result.status, message: result.message };
+    if (result.error)
+      return { error: true, status: result.status, message: result.message };
   }
 
   // Duplicate tile cards
@@ -1726,7 +1748,8 @@ async function duplicateTile(tile, boardId) {
   for (let i = 0; i < cards.length; i++) {
     const result = await duplicateCard(cards[i], newTile._id, "tile");
 
-    if (result.error) return { error: true, status: result.status, message: result.message };
+    if (result.error)
+      return { error: true, status: result.status, message: result.message };
   }
 
   return { error: false, status: 201, message: "Casa criada com sucesso" };
@@ -1737,14 +1760,17 @@ async function duplicateQuestion(question, tileId) {
     tileId: tileId,
     question: question.question,
     answers: question.answers,
-    correctAnswer: question.correctAnswer
-  }
+    correctAnswer: question.correctAnswer,
+  };
 
-  if (question.image)
-    newQuestionBody["image"] = question.image;
+  if (question.image) newQuestionBody["image"] = question.image;
 
   await Question.create(newQuestionBody).catch(() => {
-    return { error: true, status: 400, message: "Erro ao criar as perguntas do tabuleiro" };
+    return {
+      error: true,
+      status: 400,
+      message: "Erro ao criar as perguntas do tabuleiro",
+    };
   });
 
   return { error: false, status: 201, message: "Pergunta criada com sucesso" };
@@ -1753,13 +1779,11 @@ async function duplicateQuestion(question, tileId) {
 async function duplicateCard(card, resourceId, resourceType) {
   const newCardBody = {
     type: card.type,
-    info: card.info
+    info: card.info,
   };
 
-  if (resourceType === "tile")
-    newCardBody["tileId"] = resourceId;
-  else
-    newCardBody["boardId"] = resourceId;
+  if (resourceType === "tile") newCardBody["tileId"] = resourceId;
+  else newCardBody["boardId"] = resourceId;
 
   if (card.subtype) newCardBody["subtype"] = card.subtype;
   if (card.points) newCardBody["points"] = card.points;
@@ -1768,7 +1792,11 @@ async function duplicateCard(card, resourceId, resourceType) {
   if (card.content) newCardBody["content"] = card.content;
 
   await Card.create(newCardBody).catch(() => {
-    return { error: true, status: 400, message: "Erro ao criar as cartas do tabuleiro" };
+    return {
+      error: true,
+      status: 400,
+      message: "Erro ao criar as cartas do tabuleiro",
+    };
   });
 
   return { error: false, status: 201, message: "Carta criada com sucesso" };
@@ -1780,9 +1808,13 @@ async function duplicateBadge(badge, boardId) {
     name: badge.name,
     multiplier: badge.multiplier,
     cost: badge.cost,
-    image: badge.image
+    image: badge.image,
   }).catch(() => {
-    return { error: true, status: 400, message: "Erro ao criar os troféus do tabuleiro" };
+    return {
+      error: true,
+      status: 400,
+      message: "Erro ao criar os troféus do tabuleiro",
+    };
   });
 
   return { error: false, status: 201, message: "Troféu criado com sucesso" };
@@ -1887,14 +1919,9 @@ async function getQuestion(req, res) {
 }
 
 async function newQuestion(req, res) {
-  const {
-    boardName,
-    boardPosition,
-    question,
-    image,
-    answers,
-    correctAnswer,
-  } = req.body;
+  const { boardName, boardPosition, question, answers, correctAnswer } =
+    req.body;
+  const image = req.file;
 
   const board = await Board.findOne({ name: boardName });
 
@@ -1918,7 +1945,7 @@ async function newQuestion(req, res) {
   Question.create({
     tileId: tile._id,
     question: question,
-    image: image,
+    image: image?.location,
     answers: answers,
     correctAnswer: correctAnswer,
   })
@@ -1932,7 +1959,9 @@ async function newQuestion(req, res) {
 }
 
 async function updateQuestion(req, res) {
-  const { id, question, image, answers, correctAnswer } = req.body;
+  const { id, question, answers, correctAnswer } = req.body;
+  let image = req.file;
+  if (!image) image = req.body.image;
 
   const questionObject = await Question.findById(id);
 
@@ -1942,8 +1971,11 @@ async function updateQuestion(req, res) {
       .send({ error: true, message: "Pergunta não encontrada" });
   }
 
+  if (image !== 'no-change') {
+    questionObject.image = image?.location;
+  }
+
   questionObject.question = question;
-  questionObject.image = image;
   questionObject.answers = answers;
   questionObject.correctAnswer = correctAnswer;
 
