@@ -1,5 +1,7 @@
 const express = require("express");
 const router = express.Router();
+const multer = require('multer');
+const multerConfig = require('./../config/multer');
 const gameController = require("../controllers/game-ctrl.js");
 
 router.get("/data/boards", gameController.getBoards);
@@ -11,8 +13,8 @@ router.put("/data/board/tiles/update", gameController.updateTiles);
 
 router.get("/data/:board/:tile/questions", gameController.getQuestions);
 router.get("/data/question/:id", gameController.getQuestion);
-router.post("/data/questions/new", gameController.newQuestion);
-router.put("/data/question/update", gameController.updateQuestion);
+router.post("/data/questions/new", multer(multerConfig).single('image'), gameController.newQuestion);
+router.put("/data/question/update", multer(multerConfig).single('image'), gameController.updateQuestion);
 router.delete("/data/question/:id", gameController.deleteQuestion);
 
 router.get("/data/:board/deck_cards/:deck", gameController.getDeckCards);
