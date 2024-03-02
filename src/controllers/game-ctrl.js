@@ -1919,9 +1919,10 @@ async function getQuestion(req, res) {
 }
 
 async function newQuestion(req, res) {
-  const { boardName, boardPosition, question, answers, correctAnswer } =
+  const { boardName, boardPosition, question, answers: stringifiedAnswers, correctAnswer } =
     req.body;
   const image = req.file;
+  const answers = JSON.parse(stringifiedAnswers);
 
   const board = await Board.findOne({ name: boardName });
 
@@ -1959,7 +1960,8 @@ async function newQuestion(req, res) {
 }
 
 async function updateQuestion(req, res) {
-  const { id, question, answers, correctAnswer } = req.body;
+  const { id, question, answers: stringifiedAnswers, correctAnswer } = req.body;
+  const answers = JSON.parse(stringifiedAnswers);
   let image = req.file;
   if (!image) image = req.body.image;
 
