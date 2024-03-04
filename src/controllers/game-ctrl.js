@@ -1883,6 +1883,64 @@ async function updateTiles(req, res) {
   return res.status(200).send();
 }
 
+async function deleteBoard(req, res) {
+  const boardId = req.params.id;
+
+  // Delete saves and linked players
+  const saves = await Save.find({ boardId });
+  for (let i = 0; i < saves.length; i++) {
+    await Player.deleteMany({ saveId: saves[i]._id }).catch(() => {
+      return res
+        .status(400)
+        .json({ error: true, message: "Erro ao eliminar os jogadores" });
+    });
+    await Save.findByIdAndDelete(saves[i]._id).catch(() => {
+      return res
+        .status(400)
+        .json({ error: true, message: "Erro ao eliminar os dados de jogo" });
+    });
+  }
+
+  // Delete tiles and linked questions and cards
+  const tiles = await Tile.find({ boardId });
+  for (let i = 0; i < tiles.length; i++) {
+    await Question.deleteMany({ tileId: tiles[i]._id }).catch(() => {
+      return res
+        .status(400)
+        .json({ error: true, message: "Erro ao eliminar as perguntas" });
+    });
+    await Card.deleteMany({ tileId: tiles[i]._id }).catch(() => {
+      return res
+        .status(400)
+        .json({ error: true, message: "Erro ao eliminar as cartas" });
+    });
+    await Tile.findByIdAndDelete(tiles[i]._id).catch(() => {
+      return res
+        .status(400)
+        .json({ error: true, message: "Erro ao eliminar a casa" });
+    });
+  }
+
+  // Delete board and linked badges and cards
+  await Badge.deleteMany({ boardId }).catch(() => {
+    return res
+      .status(400)
+      .json({ error: true, message: "Erro ao eliminar os troféus" });
+  });
+  await Card.deleteMany({ boardId }).catch(() => {
+    return res
+      .status(400)
+      .json({ error: true, message: "Erro ao eliminar as cartas" });
+  });
+  await Board.findByIdAndDelete(boardId).catch(() => {
+    return res
+      .status(400)
+      .json({ error: true, message: "Erro ao eliminar o tabuleiro" });
+  });
+
+  return res.status(200).send();
+}
+
 async function getQuestions(req, res) {
   const boardName = req.params.board;
   const boardPosition = parseInt(req.params.tile);
@@ -1919,8 +1977,13 @@ async function getQuestion(req, res) {
 }
 
 async function newQuestion(req, res) {
-  const { boardName, boardPosition, question, answers: stringifiedAnswers, correctAnswer } =
-    req.body;
+  const {
+    boardName,
+    boardPosition,
+    question,
+    answers: stringifiedAnswers,
+    correctAnswer,
+  } = req.body;
   const image = req.file;
   const answers = JSON.parse(stringifiedAnswers);
 
@@ -1973,7 +2036,7 @@ async function updateQuestion(req, res) {
       .send({ error: true, message: "Pergunta não encontrada" });
   }
 
-  if (image !== 'no-change') {
+  if (image !== "no-change") {
     questionObject.image = image?.location;
   }
 
@@ -2351,6 +2414,7 @@ module.exports = {
   duplicateBoard,
   updateBoard,
   updateTiles,
+  deleteBoard,
   getQuestions,
   getQuestion,
   newQuestion,

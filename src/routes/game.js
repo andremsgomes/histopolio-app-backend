@@ -10,6 +10,7 @@ router.get("/data/board/:board", gameController.getBoard);
 router.post("/data/board/new", gameController.newBoard);
 router.put("/data/board/update", gameController.updateBoard);
 router.put("/data/board/tiles/update", gameController.updateTiles);
+router.delete("/data/board/:id", gameController.deleteBoard);
 
 router.get("/data/:board/:tile/questions", gameController.getQuestions);
 router.get("/data/question/:id", gameController.getQuestion);
