@@ -28,6 +28,7 @@ module.exports = {
   },
   fileFilter: (req, file, cb) => {
     const allowedMimes = ["image/jpeg", "image/pjpeg", "image/png"];
+    console.log(`FILE TYPE: ${file.mimetype}`);
 
     if (allowedMimes.includes(file.mimetype)) {
       cb(null, true);
