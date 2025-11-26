@@ -9,7 +9,7 @@ function signup(req, res) {
   if (!(name && avatar && email && password)) {
     return res
       .status(400)
-      .send({ error: true, message: "Dados mal formatados" });
+      .send({ error: true, message: "Invalid data format" });
   }
 
   // generate salt to hash password
@@ -39,7 +39,7 @@ function signup(req, res) {
     .catch(() => {
       return res.status(400).json({
         error: true,
-        message: "Utilizador já existente",
+        message: "User already exists",
       });
     });
 }
@@ -50,7 +50,7 @@ async function login(req, res) {
   if (!(email && password)) {
     return res
       .status(400)
-      .send({ error: true, message: "Dados mal formatados" });
+      .send({ error: true, message: "Invalid data format" });
   }
 
   const user = await User.findOne({ email: email });
@@ -58,11 +58,11 @@ async function login(req, res) {
   if (!user) {
     return res
       .status(404)
-      .json({ error: true, message: "Utilizador não encontrado" });
+      .json({ error: true, message: "User not found" });
   }
 
   if (!(await bcrypt.compare(password, user.password))) {
-    return res.status(403).json({ error: true, message: "Password errada" });
+    return res.status(403).json({ error: true, message: "Incorrect password" });
   }
 
   const returnUser = {
@@ -82,7 +82,7 @@ async function updateProfile(req, res) {
   if (!(userId, name && avatarToSend && email)) {
     return res
       .status(400)
-      .send({ error: true, message: "Dados mal formatados" });
+      .send({ error: true, message: "Invalid data format" });
   }
 
   const user = await User.findById(userId);
@@ -90,7 +90,7 @@ async function updateProfile(req, res) {
   if (!user) {
     return res
       .status(404)
-      .send({ error: true, message: "Utilizador não encontrado" });
+      .send({ error: true, message: "User not found" });
   }
 
   user.name = name;
