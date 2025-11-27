@@ -434,7 +434,7 @@ async function getPlayerSavedData(req, res) {
   if (!board) {
     return res
       .status(404)
-      .json({ error: true, message: "Tabuleiro não encontrado" });
+      .json({ error: true, message: "Game board not found" });
   }
 
   const saves = await Save.find({ boardId: board._id });
@@ -465,7 +465,7 @@ async function getPlayers(req, res) {
   if (!board) {
     return res
       .status(404)
-      .json({ error: true, message: "Tabuleiro não encontrado" });
+      .json({ error: true, message: "Game board not found" });
   }
 
   const save = await Save.findOne({ name: saveName });
@@ -473,7 +473,7 @@ async function getPlayers(req, res) {
   if (!save) {
     return res
       .status(404)
-      .json({ error: true, message: "Ficheiro não encontrado" });
+      .json({ error: true, message: "File not found" });
   }
 
   const players = await Player.find({ saveId: save._id });
@@ -515,7 +515,7 @@ async function deleteSave(req, res) {
   if (!save) {
     return res
       .status(404)
-      .json({ error: true, message: "Dados guardados não encontrados" });
+      .json({ error: true, message: "Save data not found" });
   }
 
   await Player.deleteMany({ saveId: save._id });
@@ -532,7 +532,7 @@ async function getSaves(req, res) {
   if (!board) {
     return res
       .status(404)
-      .json({ error: true, message: "Tabuleiro não encontrado" });
+      .json({ error: true, message: "Game board not found" });
   }
 
   const saves = await Save.find({ boardId: board._id });
@@ -568,7 +568,7 @@ async function getBoard(req, res) {
   if (!board) {
     return res
       .status(404)
-      .json({ error: true, message: "Tabuleiro não encontrado" });
+      .json({ error: true, message: "Game board not found" });
   }
 
   const data = {
@@ -618,7 +618,7 @@ async function newBoard(req, res) {
   if (!(userId && name && description && image)) {
     return res
       .status(400)
-      .send({ error: true, message: "Dados mal formatados" });
+      .send({ error: true, message: "Invalid data format" });
   }
 
   const board = await Board.create({
@@ -629,7 +629,7 @@ async function newBoard(req, res) {
   }).catch(() => {
     return res.status(400).json({
       error: true,
-      message: "Tabuleiro com o mesmo nome já existente",
+      message: "A game board with the same name already exists",
     });
   });
 
@@ -1610,7 +1610,7 @@ async function importBoard(req, res) {
   if (!(userId && boardId)) {
     return res
       .status(400)
-      .send({ error: true, message: "Dados mal formatados" });
+      .send({ error: true, message: "Invalid data format" });
   }
 
   const result = await duplicateBoard(boardId);
@@ -1628,19 +1628,19 @@ async function duplicateBoard(userId, boardId) {
   const user = await User.findById(userId);
 
   if (!user)
-    return { error: true, status: 404, message: "Utilizador não encontrado" };
+    return { error: true, status: 404, message: "User not found" };
   if (!user.adminToken)
     return {
       error: true,
       status: 403,
-      message: "O utilizador não tem permissões para criar novos tabuleiros",
+      message: "The user does not have permission to create new game boards",
     };
 
   // Duplicate board
   const board = await Board.findById(boardId);
 
   if (!board)
-    return { error: true, status: 404, message: "Tabuleiro não encontrado" };
+    return { error: true, status: 404, message: "Game board not found" };
 
   const newBoard = await Board.create({
     adminId: userId,
@@ -1651,7 +1651,7 @@ async function duplicateBoard(userId, boardId) {
     return {
       error: true,
       status: 400,
-      message: "Tabuleiro com o mesmo nome já existente",
+      message: "A game board with the same name already exists",
     };
   });
 
@@ -1690,7 +1690,7 @@ async function duplicateBoard(userId, boardId) {
   return {
     error: false,
     status: 201,
-    message: "Tabuleiro duplicado com sucesso",
+    message: "Game board duplicated successfully",
   };
 }
 
@@ -1728,7 +1728,7 @@ async function duplicateTile(tile, boardId) {
     return {
       error: true,
       status: 400,
-      message: "Erro ao criar as casas do tabuleiro",
+      message: "Error creating the game board tiles",
     };
   });
 
@@ -1752,7 +1752,7 @@ async function duplicateTile(tile, boardId) {
       return { error: true, status: result.status, message: result.message };
   }
 
-  return { error: false, status: 201, message: "Casa criada com sucesso" };
+  return { error: false, status: 201, message: "Tile created successfully" };
 }
 
 async function duplicateQuestion(question, tileId) {
@@ -1769,11 +1769,11 @@ async function duplicateQuestion(question, tileId) {
     return {
       error: true,
       status: 400,
-      message: "Erro ao criar as perguntas do tabuleiro",
+      message: "Error creating the game board questions",
     };
   });
 
-  return { error: false, status: 201, message: "Pergunta criada com sucesso" };
+  return { error: false, status: 201, message: "Question created successfully" };
 }
 
 async function duplicateCard(card, resourceId, resourceType) {
@@ -1795,11 +1795,11 @@ async function duplicateCard(card, resourceId, resourceType) {
     return {
       error: true,
       status: 400,
-      message: "Erro ao criar as cartas do tabuleiro",
+      message: "Error creating the game board cards",
     };
   });
 
-  return { error: false, status: 201, message: "Carta criada com sucesso" };
+  return { error: false, status: 201, message: "Card created successfully" };
 }
 
 async function duplicateBadge(badge, boardId) {
@@ -1813,11 +1813,11 @@ async function duplicateBadge(badge, boardId) {
     return {
       error: true,
       status: 400,
-      message: "Erro ao criar os troféus do tabuleiro",
+      message: "Error creating the game board's badges",
     };
   });
 
-  return { error: false, status: 201, message: "Troféu criado com sucesso" };
+  return { error: false, status: 201, message: "Badge created successfully" };
 }
 
 async function updateBoard(req, res) {
@@ -1826,7 +1826,7 @@ async function updateBoard(req, res) {
   if (!boardName) {
     return res
       .status(400)
-      .send({ error: true, message: "Dados mal formatados" });
+      .send({ error: true, message: "Invalid data format" });
   }
 
   const board = await Board.findOne({ name: boardName });
@@ -1834,7 +1834,7 @@ async function updateBoard(req, res) {
   if (!board) {
     return res
       .status(404)
-      .json({ error: true, message: "Tabuleiro não encontrado" });
+      .json({ error: true, message: "Game board not found" });
   }
 
   if (name && name !== board.name) {
@@ -1843,7 +1843,7 @@ async function updateBoard(req, res) {
     if (newBoard) {
       return res.status(400).json({
         error: true,
-        message: "Já existe um tabuleiro com o nome dado",
+        message: "A game board with the same name already exists",
       });
     }
 
@@ -1869,7 +1869,7 @@ async function updateTiles(req, res) {
   if (!tiles) {
     return res
       .status(400)
-      .send({ error: true, message: "Dados mal formatados" });
+      .send({ error: true, message: "Invalid data format" });
   }
 
   for (let i = 0; i < tiles.length; i++) {
@@ -1892,12 +1892,12 @@ async function deleteBoard(req, res) {
     await Player.deleteMany({ saveId: saves[i]._id }).catch(() => {
       return res
         .status(400)
-        .json({ error: true, message: "Erro ao eliminar os jogadores" });
+        .json({ error: true, message: "Error deleting players" });
     });
     await Save.findByIdAndDelete(saves[i]._id).catch(() => {
       return res
         .status(400)
-        .json({ error: true, message: "Erro ao eliminar os dados de jogo" });
+        .json({ error: true, message: "Error deleting game data" });
     });
   }
 
@@ -1907,17 +1907,17 @@ async function deleteBoard(req, res) {
     await Question.deleteMany({ tileId: tiles[i]._id }).catch(() => {
       return res
         .status(400)
-        .json({ error: true, message: "Erro ao eliminar as perguntas" });
+        .json({ error: true, message: "Error deleting questions" });
     });
     await Card.deleteMany({ tileId: tiles[i]._id }).catch(() => {
       return res
         .status(400)
-        .json({ error: true, message: "Erro ao eliminar as cartas" });
+        .json({ error: true, message: "Error deleting cards" });
     });
     await Tile.findByIdAndDelete(tiles[i]._id).catch(() => {
       return res
         .status(400)
-        .json({ error: true, message: "Erro ao eliminar a casa" });
+        .json({ error: true, message: "Error deleting tile" });
     });
   }
 
@@ -1925,17 +1925,17 @@ async function deleteBoard(req, res) {
   await Badge.deleteMany({ boardId }).catch(() => {
     return res
       .status(400)
-      .json({ error: true, message: "Erro ao eliminar os troféus" });
+      .json({ error: true, message: "Error deleting badges" });
   });
   await Card.deleteMany({ boardId }).catch(() => {
     return res
       .status(400)
-      .json({ error: true, message: "Erro ao eliminar as cartas" });
+      .json({ error: true, message: "Error deleting cards" });
   });
   await Board.findByIdAndDelete(boardId).catch(() => {
     return res
       .status(400)
-      .json({ error: true, message: "Erro ao eliminar o tabuleiro" });
+      .json({ error: true, message: "Error deleting game board" });
   });
 
   return res.status(200).send();
@@ -1950,7 +1950,7 @@ async function getQuestions(req, res) {
   if (!board) {
     return res
       .status(404)
-      .send({ error: true, message: "Tabuleiro não encontrado" });
+      .send({ error: true, message: "Game board not found" });
   }
 
   const tile = await Tile.findOne({
@@ -1961,7 +1961,7 @@ async function getQuestions(req, res) {
   if (!tile) {
     return res
       .status(404)
-      .send({ error: true, message: "Casa não encontrada" });
+      .send({ error: true, message: "Tile not found" });
   }
 
   const questions = await Question.find({ tileId: tile._id });
@@ -1992,7 +1992,7 @@ async function newQuestion(req, res) {
   if (!board) {
     return res
       .status(404)
-      .send({ error: true, message: "Tabuleiro não encontrado" });
+      .send({ error: true, message: "Game board not found" });
   }
 
   const tile = await Tile.findOne({
@@ -2003,7 +2003,7 @@ async function newQuestion(req, res) {
   if (!tile) {
     return res
       .status(404)
-      .send({ error: true, message: "Casa não encontrada" });
+      .send({ error: true, message: "Tile not found" });
   }
 
   Question.create({
@@ -2033,7 +2033,7 @@ async function updateQuestion(req, res) {
   if (!questionObject) {
     return res
       .status(404)
-      .send({ error: true, message: "Pergunta não encontrada" });
+      .send({ error: true, message: "Question not found" });
   }
 
   if (image !== "no-change") {
@@ -2054,7 +2054,7 @@ async function deleteQuestion(req, res) {
 
   await Question.deleteOne({ _id: id }).catch((error) => {
     console.log(error);
-    return res.status(400).send({ error: true, message: "Erro interno" });
+    return res.status(400).send({ error: true, message: "Internal error" });
   });
 
   return res.status(200).send();
@@ -2069,7 +2069,7 @@ async function getDeckCards(req, res) {
   if (!board) {
     return res
       .status(404)
-      .send({ error: true, message: "Tabuleiro não encontrado" });
+      .send({ error: true, message: "Game board not found" });
   }
 
   const cards = await Card.find({
@@ -2089,7 +2089,7 @@ async function newDeckCard(req, res) {
   if (!board) {
     return res
       .status(404)
-      .send({ error: true, message: "Tabuleiro não encontrado" });
+      .send({ error: true, message: "Game board not found" });
   }
 
   await Card.create({
@@ -2116,7 +2116,7 @@ async function updateDeckCard(req, res) {
   if (!card) {
     return res
       .status(404)
-      .send({ error: true, message: "Carta não encontrada" });
+      .send({ error: true, message: "Card not found" });
   }
 
   card.subtype = deck;
@@ -2139,7 +2139,7 @@ async function getTrainCards(req, res) {
   if (!board) {
     return res
       .status(404)
-      .send({ error: true, message: "Tabuleiro não encontrado" });
+      .send({ error: true, message: "Game board not found" });
   }
 
   const tile = await Tile.findOne({
@@ -2150,7 +2150,7 @@ async function getTrainCards(req, res) {
   if (!tile) {
     return res
       .status(404)
-      .send({ error: true, message: "Casa não encontrada" });
+      .send({ error: true, message: "Tile not found" });
   }
 
   const cards = await Card.find({ type: "train", tileId: tile._id });
@@ -2166,7 +2166,7 @@ async function newTrainCard(req, res) {
   if (!board) {
     return res
       .status(404)
-      .send({ error: true, message: "Tabuleiro não encontrado" });
+      .send({ error: true, message: "Game board not found" });
   }
 
   const tile = await Tile.findOne({
@@ -2177,7 +2177,7 @@ async function newTrainCard(req, res) {
   if (!tile) {
     return res
       .status(404)
-      .send({ error: true, message: "Casa não encontrada" });
+      .send({ error: true, message: "Tile not found" });
   }
 
   await Card.create({
@@ -2201,7 +2201,7 @@ async function updateTrainCard(req, res) {
   if (!card) {
     return res
       .status(404)
-      .send({ error: true, message: "Carta não encontrada" });
+      .send({ error: true, message: "Card not found" });
   }
 
   card.info = info;
@@ -2224,7 +2224,7 @@ async function deleteCard(req, res) {
 
   await Card.deleteOne({ _id: id }).catch((error) => {
     console.log(error);
-    return res.status(400).send({ error: true, message: "Erro interno" });
+    return res.status(400).send({ error: true, message: "Internal error" });
   });
 
   return res.status(200).send();
@@ -2238,7 +2238,7 @@ async function getBadges(req, res) {
   if (!board) {
     return res
       .status(404)
-      .send({ error: true, message: "Tabuleiro não encontrado" });
+      .send({ error: true, message: "Game board not found" });
   }
 
   const badges = await Badge.find({ boardId: board._id }).sort("multiplier");
@@ -2261,7 +2261,7 @@ async function newBadge(req, res) {
   if (!board) {
     return res
       .status(404)
-      .send({ error: true, message: "Tabuleiro não encontrado" });
+      .send({ error: true, message: "Game board not found" });
   }
 
   await Badge.create({
@@ -2273,7 +2273,7 @@ async function newBadge(req, res) {
   }).catch(() => {
     return res
       .status(400)
-      .send({ error: true, message: "Já existe um troféu com o mesmo nome" });
+      .send({ error: true, message: "A badge with the same name already exists" });
   });
 
   return res.status(201).send();
@@ -2299,7 +2299,7 @@ async function deleteBadge(req, res) {
 
   await Badge.deleteOne({ _id: id }).catch((error) => {
     console.log(error);
-    return res.status(400).send({ error: true, message: "Erro interno" });
+    return res.status(400).send({ error: true, message: "Internal error" });
   });
 
   return res.status(200).send();
@@ -2314,7 +2314,7 @@ async function getPlayer(req, res) {
   if (!board) {
     return res
       .status(404)
-      .send({ error: true, message: "Tabuleiro não encontrado" });
+      .send({ error: true, message: "Game board not found" });
   }
 
   const saves = await Save.find({ boardId: board._id });
@@ -2332,7 +2332,7 @@ async function getPlayer(req, res) {
 
   return res
     .status(404)
-    .send({ error: true, message: "Sem dados guardados para o utilizador" });
+    .send({ error: true, message: "No saved data for the user" });
 }
 
 async function createPlayer(req, res) {
@@ -2343,7 +2343,7 @@ async function createPlayer(req, res) {
   if (!adminId) {
     return res.status(404).send({
       error: true,
-      message: "Nenhuma sessão encontrada com o código dado",
+      message: "No session found with the given code",
     });
   }
 
@@ -2353,7 +2353,7 @@ async function createPlayer(req, res) {
   if (boardName !== board.name) {
     return res.status(404).send({
       error: true,
-      message: "Nenhuma sessão encontrada para o tabuleiro",
+      message: "No session found for the game board",
     });
   }
 
@@ -2362,7 +2362,7 @@ async function createPlayer(req, res) {
   if (player) {
     return res.status(403).send({
       error: true,
-      message: "O utilizador já se encontra registado no tabuleiro",
+      message: "The user is already registered on the game board",
     });
   }
 
