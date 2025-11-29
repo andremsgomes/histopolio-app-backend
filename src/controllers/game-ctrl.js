@@ -643,7 +643,7 @@ async function addTiles(boardId) {
   await Tile.create({
     boardId: boardId,
     boardPosition: 0,
-    name: "Partida",
+    name: "Go",
     type: "go",
     position: {
       x: 9.300000190734863,
@@ -664,7 +664,7 @@ async function addTiles(boardId) {
   await Tile.create({
     boardId: boardId,
     boardPosition: 1,
-    name: "Casa sem nome",
+    name: "Unnamed tile",
     type: "groupProperty",
     position: {
       x: 8,
@@ -691,7 +691,7 @@ async function addTiles(boardId) {
   await Tile.create({
     boardId: boardId,
     boardPosition: 2,
-    name: "Decisões Do Senado",
+    name: "Sennate Decisions",
     type: "community",
     position: {
       x: 7,
@@ -711,7 +711,7 @@ async function addTiles(boardId) {
   await Tile.create({
     boardId: boardId,
     boardPosition: 3,
-    name: "Casa sem nome",
+    name: "Unnamed tile",
     type: "groupProperty",
     position: {
       x: 6,
@@ -738,7 +738,7 @@ async function addTiles(boardId) {
   await Tile.create({
     boardId: boardId,
     boardPosition: 4,
-    name: "Pague Seguro Escolar",
+    name: "Pay School Insurance",
     type: "pay",
     position: {
       x: 5,
@@ -759,7 +759,7 @@ async function addTiles(boardId) {
   await Tile.create({
     boardId: boardId,
     boardPosition: 5,
-    name: "Casa sem nome",
+    name: "Unnamed tile",
     type: "train",
     position: {
       x: 4,
@@ -780,7 +780,7 @@ async function addTiles(boardId) {
   await Tile.create({
     boardId: boardId,
     boardPosition: 6,
-    name: "Sorte",
+    name: "Chance",
     type: "chance",
     position: {
       x: 3,
@@ -800,7 +800,7 @@ async function addTiles(boardId) {
   await Tile.create({
     boardId: boardId,
     boardPosition: 7,
-    name: "Casa sem nome",
+    name: "Unnamed tile",
     type: "groupProperty",
     position: {
       x: 2,
@@ -827,7 +827,7 @@ async function addTiles(boardId) {
   await Tile.create({
     boardId: boardId,
     boardPosition: 8,
-    name: "Casa sem nome",
+    name: "Unnamed tile",
     type: "groupProperty",
     position: {
       x: 1,
@@ -854,7 +854,7 @@ async function addTiles(boardId) {
   await Tile.create({
     boardId: boardId,
     boardPosition: 9,
-    name: "Casa sem nome",
+    name: "Unnamed tile",
     type: "groupProperty",
     position: {
       x: 0,
@@ -881,7 +881,7 @@ async function addTiles(boardId) {
   await Tile.create({
     boardId: boardId,
     boardPosition: 10,
-    name: "Passagem Pela Biblioteca",
+    name: "Library Passage",
     type: "prison",
     position: {
       x: -1.2999999523162842,
@@ -901,7 +901,7 @@ async function addTiles(boardId) {
   await Tile.create({
     boardId: boardId,
     boardPosition: 11,
-    name: "Casa sem nome",
+    name: "Unnamed tile",
     type: "groupProperty",
     position: {
       x: -1.2999999523162842,
@@ -928,7 +928,7 @@ async function addTiles(boardId) {
   await Tile.create({
     boardId: boardId,
     boardPosition: 12,
-    name: "Pague Prestação Propinas",
+    name: "Pay Tuition Installment",
     type: "pay",
     position: {
       x: -1.2999999523162842,
@@ -949,7 +949,7 @@ async function addTiles(boardId) {
   await Tile.create({
     boardId: boardId,
     boardPosition: 13,
-    name: "Casa sem nome",
+    name: "Unnamed tile",
     type: "groupProperty",
     position: {
       x: -1.2999999523162842,
@@ -976,7 +976,7 @@ async function addTiles(boardId) {
   await Tile.create({
     boardId: boardId,
     boardPosition: 14,
-    name: "Casa sem nome",
+    name: "Unnamed tile",
     type: "groupProperty",
     position: {
       x: -1.2999999523162842,
@@ -1003,7 +1003,7 @@ async function addTiles(boardId) {
   await Tile.create({
     boardId: boardId,
     boardPosition: 15,
-    name: "Casa sem nome",
+    name: "Unnamed tile",
     type: "train",
     position: {
       x: -1.2999999523162842,
@@ -1024,7 +1024,7 @@ async function addTiles(boardId) {
   await Tile.create({
     boardId: boardId,
     boardPosition: 16,
-    name: "Casa sem nome",
+    name: "Unnamed tile",
     type: "groupProperty",
     position: {
       x: -1.2999999523162842,
@@ -1051,7 +1051,7 @@ async function addTiles(boardId) {
   await Tile.create({
     boardId: boardId,
     boardPosition: 17,
-    name: "Decisões Do Senado",
+    name: "Sennate Decisions",
     type: "community",
     position: {
       x: -1.2999999523162842,
@@ -1071,7 +1071,7 @@ async function addTiles(boardId) {
   await Tile.create({
     boardId: boardId,
     boardPosition: 18,
-    name: "Casa sem nome",
+    name: "Unnamed tile",
     type: "groupProperty",
     position: {
       x: -1.2999999523162842,
@@ -1098,7 +1098,7 @@ async function addTiles(boardId) {
   await Tile.create({
     boardId: boardId,
     boardPosition: 19,
-    name: "Casa sem nome",
+    name: "Unnamed tile",
     type: "groupProperty",
     position: {
       x: -1.2999999523162842,
@@ -1125,7 +1125,7 @@ async function addTiles(boardId) {
   await Tile.create({
     boardId: boardId,
     boardPosition: 20,
-    name: "Associação De Estudantes",
+    name: "Student Association",
     type: "parking",
     position: {
       x: -1.2999999523162842,
@@ -1145,7 +1145,7 @@ async function addTiles(boardId) {
   await Tile.create({
     boardId: boardId,
     boardPosition: 21,
-    name: "Casa sem nome",
+    name: "Unnamed tile",
     type: "groupProperty",
     position: {
       x: 0,
@@ -1172,7 +1172,7 @@ async function addTiles(boardId) {
   await Tile.create({
     boardId: boardId,
     boardPosition: 22,
-    name: "Sorte",
+    name: "Chance",
     type: "chance",
     position: {
       x: 1,
@@ -1192,7 +1192,7 @@ async function addTiles(boardId) {
   await Tile.create({
     boardId: boardId,
     boardPosition: 23,
-    name: "Casa sem nome",
+    name: "Unnamed tile",
     type: "groupProperty",
     position: {
       x: 2,
@@ -1219,7 +1219,7 @@ async function addTiles(boardId) {
   await Tile.create({
     boardId: boardId,
     boardPosition: 24,
-    name: "Casa sem nome",
+    name: "Unnamed tile",
     type: "groupProperty",
     position: {
       x: 3,
@@ -1246,7 +1246,7 @@ async function addTiles(boardId) {
   await Tile.create({
     boardId: boardId,
     boardPosition: 25,
-    name: "Casa sem nome",
+    name: "Unnamed tile",
     type: "train",
     position: {
       x: 4,
@@ -1267,7 +1267,7 @@ async function addTiles(boardId) {
   await Tile.create({
     boardId: boardId,
     boardPosition: 26,
-    name: "Casa sem nome",
+    name: "Unnamed tile",
     type: "groupProperty",
     position: {
       x: 5,
@@ -1294,7 +1294,7 @@ async function addTiles(boardId) {
   await Tile.create({
     boardId: boardId,
     boardPosition: 27,
-    name: "Casa sem nome",
+    name: "Unnamed tile",
     type: "groupProperty",
     position: {
       x: 6,
@@ -1321,7 +1321,7 @@ async function addTiles(boardId) {
   await Tile.create({
     boardId: boardId,
     boardPosition: 28,
-    name: "Pague Prestação Propinas",
+    name: "Pay Tuition Installment",
     type: "pay",
     position: {
       x: 7,
@@ -1342,7 +1342,7 @@ async function addTiles(boardId) {
   await Tile.create({
     boardId: boardId,
     boardPosition: 29,
-    name: "Casa sem nome",
+    name: "Unnamed tile",
     type: "groupProperty",
     position: {
       x: 8,
@@ -1369,7 +1369,7 @@ async function addTiles(boardId) {
   await Tile.create({
     boardId: boardId,
     boardPosition: 30,
-    name: "Vá Para A Biblioteca",
+    name: "Go to the Library",
     type: "goToPrison",
     position: {
       x: 9.300000190734863,
@@ -1389,7 +1389,7 @@ async function addTiles(boardId) {
   await Tile.create({
     boardId: boardId,
     boardPosition: 31,
-    name: "Casa sem nome",
+    name: "Unnamed tile",
     type: "groupProperty",
     position: {
       x: 9.300000190734863,
@@ -1416,7 +1416,7 @@ async function addTiles(boardId) {
   await Tile.create({
     boardId: boardId,
     boardPosition: 32,
-    name: "Casa sem nome",
+    name: "Unnamed tile",
     type: "groupProperty",
     position: {
       x: 9.300000190734863,
@@ -1443,7 +1443,7 @@ async function addTiles(boardId) {
   await Tile.create({
     boardId: boardId,
     boardPosition: 33,
-    name: "Decisões Do Senado",
+    name: "Sennate Decisions",
     type: "community",
     position: {
       x: 9.300000190734863,
@@ -1463,7 +1463,7 @@ async function addTiles(boardId) {
   await Tile.create({
     boardId: boardId,
     boardPosition: 34,
-    name: "Casa sem nome",
+    name: "Unnamed tile",
     type: "groupProperty",
     position: {
       x: 9.300000190734863,
@@ -1490,7 +1490,7 @@ async function addTiles(boardId) {
   await Tile.create({
     boardId: boardId,
     boardPosition: 35,
-    name: "Casa sem nome",
+    name: "Unnamed tile",
     type: "train",
     position: {
       x: 9.300000190734863,
@@ -1511,7 +1511,7 @@ async function addTiles(boardId) {
   await Tile.create({
     boardId: boardId,
     boardPosition: 36,
-    name: "Sorte",
+    name: "Chance",
     type: "chance",
     position: {
       x: 9.300000190734863,
@@ -1531,7 +1531,7 @@ async function addTiles(boardId) {
   await Tile.create({
     boardId: boardId,
     boardPosition: 37,
-    name: "Casa sem nome",
+    name: "Unnamed tile",
     type: "groupProperty",
     position: {
       x: 9.300000190734863,
@@ -1558,7 +1558,7 @@ async function addTiles(boardId) {
   await Tile.create({
     boardId: boardId,
     boardPosition: 38,
-    name: "Pague Prestação Propinas",
+    name: "Pay Tuition Installment",
     type: "pay",
     position: {
       x: 9.300000190734863,
@@ -1579,7 +1579,7 @@ async function addTiles(boardId) {
   await Tile.create({
     boardId: boardId,
     boardPosition: 39,
-    name: "Casa sem nome",
+    name: "Unnamed tile",
     type: "groupProperty",
     position: {
       x: 9.300000190734863,
