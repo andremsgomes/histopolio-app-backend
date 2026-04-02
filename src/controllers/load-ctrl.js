@@ -150,7 +150,7 @@ async function login(ws, dataReceived) {
   const dataToSend = {
     type: "auth",
     adminId: user._id,
-    language: "pt",
+    language: user.language || "en",
     boards: boardNames,
   };
 
