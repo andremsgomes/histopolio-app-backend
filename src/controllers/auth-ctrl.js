@@ -3,7 +3,7 @@ const bcrypt = require("bcrypt");
 const User = require("../models/User");
 
 function signup(req, res) {
-  const { name, email, password } = req.body;
+  const { name, email, password, language } = req.body;
   const avatar = req.file;
 
   if (!(name && avatar && email && password)) {
@@ -19,10 +19,11 @@ function signup(req, res) {
   const hashedPassword = bcrypt.hashSync(password, salt);
 
   const body = {
-    name: name,
-    email: email,
+    name,
+    email,
     password: hashedPassword,
     avatarUrl: avatar.location,
+    language
   };
 
   User.create(body)
@@ -33,6 +34,7 @@ function signup(req, res) {
         email: user.email,
         avatar: user.avatarUrl,
         adminToken: user.adminToken,
+        language: user.language || "en"
       };
       return res.status(201).json(returnUser);
     })
