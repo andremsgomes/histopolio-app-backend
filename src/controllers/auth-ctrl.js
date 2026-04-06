@@ -73,6 +73,7 @@ async function login(req, res) {
     email: user.email,
     avatar: user.avatarUrl,
     adminToken: user.adminToken,
+    language: user.language || "en"
   };
 
   return res.status(200).json(returnUser);
