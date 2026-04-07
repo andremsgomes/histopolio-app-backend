@@ -80,7 +80,7 @@ async function login(req, res) {
 }
 
 async function updateProfile(req, res) {
-  const { userId, name, avatarToSend, email } = req.body;
+  const { userId, name, avatarToSend, email, language } = req.body;
 
   if (!(userId, name && avatarToSend && email)) {
     return res
@@ -99,6 +99,10 @@ async function updateProfile(req, res) {
   user.name = name;
   user.email = email;
   user.avatarUrl = avatarToSend;
+  
+  if (language) {
+    user.language = language;
+  }
 
   await user.save();
 
