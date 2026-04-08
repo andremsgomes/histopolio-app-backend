@@ -186,7 +186,7 @@ async function addPlayerToGame(unityWS, dataReceived) {
     userId: player.userId,
     name: dataReceived["name"],
     avatar: dataReceived["avatar"],
-    language: dataReceived["language"],
+    language: dataReceived["language"] || "en",
     points: player.points,
     position: player.boardPosition,
     numTurns: player.turns,
